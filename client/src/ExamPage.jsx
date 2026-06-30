@@ -23,7 +23,7 @@ export default function ExamPage() {
   const topic =
     location.state?.topic || "";
 
-  const totalTime = 960;
+  const totalTime = 2400;
 
   const totalQuestions =
     questionsData.length;

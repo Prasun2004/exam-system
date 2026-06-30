@@ -2,9 +2,12 @@ import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
 import Result from "./Schema.js";
-
+import dotenv from 'dotenv';
 const app=express();
 app.use(express.json());
+import { GoogleGenAI } from '@google/genai';
+
+dotenv.config();
 
 app.use(cors({
     origin: true,
@@ -56,6 +59,61 @@ app.post("/submit", async (req, res) => {
     res.status(500).json({
       message: "Server error",
     });
+  }
+});
+
+const ai = new GoogleGenAI({
+  apiKey: process.env.GEMINI_API_KEY
+});
+
+app.post("/ai-analysis", async (req, res) => {
+  try {
+    const { score, percentage, questions, topic } = req.body;
+
+if (!process.env.GEMINI_API_KEY) {
+      return res.status(500).json({ error: "Backend error: Gemini API key is missing." });
+    }
+
+    // 1. Filter the data beforehand so the AI only gets what it needs to analyze (Saves tokens & improves focus)
+    const missedQuestions = questions.filter(q => q.status === 'wrong' || q.status === 'unattempted');
+
+    // 2. Build the targeted prompt
+    const prompt = `
+      You are an expert academic tutor. Analyze the following list of questions that a student got WRONG or UNATTEMPTED in a recent "${topic}" exam. 
+      
+      Overall Exam Stats: Score ${score}, Percentage ${percentage}%.
+      
+      Data to analyze (Wrong and Skipped questions only):
+      ${JSON.stringify(missedQuestions, null, 2)}
+      
+      Please generate a study guide formatted cleanly with these sections:
+      
+      1. 🧠 Error Breakdown & Logic:
+         For each question provided in the data:
+         - State the question number, section name, and the question text.
+         - Clearly explain WHY the "Correct Answer" is right.
+         - If they answered incorrectly, briefly explain the flaw in their choice ("userAnswer"). If they skipped it, explain the trap of the question.
+         
+      2. 📝 Target Concept Short Notes:
+         Group the mistakes by their "section" topic (e.g., Idioms, Synonyms, Sentence Improvement). Provide a brief, 2-3 sentence high-value grammar rule, definition, or trick for that specific topic so they don't repeat the mistake.
+         
+      3. 💡 Memory Reminders:
+         Provide 2-3 quick, catchy bullet-point "Mental Reminders" or mnemonics to keep in mind for future tests regarding these specific weak areas.
+
+      Keep the tone highly encouraging, diagnostic, and structured. Use emojis for readability. Do not mention any questions that they got correct.
+    `;
+
+    // 3. Request analysis from Gemini
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: prompt,
+    });
+
+    res.json({ analysis: response.text });
+
+  } catch (error) {
+    console.error("Gemini API Error:", error);
+    res.status(500).json({ error: "Failed to generate AI tutoring report." });
   }
 });
 

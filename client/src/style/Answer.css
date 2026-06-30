@@ -100,3 +100,46 @@
   font-weight: bold;
   margin-top: 5px;
 }
+
+/* AI Button Custom Style */
+.ai-btn {
+  background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: opacity 0.2s;
+}
+
+.ai-btn:disabled {
+  background: #cccccc;
+  cursor: not-allowed;
+}
+
+/* AI Analysis Container Box */
+.ai-analysis-section {
+  background-color: #f4f3ff;
+  border-left: 5px solid #6a11cb;
+  padding: 20px;
+  margin: 20px 0;
+  border-radius: 4px;
+  text-align: left;
+}
+
+.ai-response-box {
+  line-height: 1.6;
+  color: #333;
+  font-size: 15px;
+}
+
+.error-text {
+  color: red;
+  font-weight: bold;
+}
+
+.loader {
+  font-style: italic;
+  color: #666;
+}

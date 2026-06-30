@@ -1,243 +1,543 @@
-const questionsData =  [
+const questionsData = [
   {
     "id": 1,
-    "section": "Virology - General Properties",
-    "question": "Which viral structural component is entirely derived from the host cell membrane during the budding process?",
+    "section": "Hematopoiesis",
+    "question": "Which cytokine drives a multipotent stem cell to become a common myeloid progenitor?",
     "options": [
-      "Capsid matrix",
-      "Lipid envelope",
-      "Glycoprotein spikes",
-      "Capsomere subunit"
+      "Interleukin-3 (IL-3)",
+      "GM-CSF",
+      "Stem Cell Factor",
+      "Flt3 Ligand"
     ],
-    "answer": "Lipid envelope"
+    "answer": "Interleukin-3 (IL-3)"
   },
   {
     "id": 2,
-    "section": "Virology - Replication",
-    "question": "An uncoating step during viral replication is strictly required for which type of virus to initiate transcription?",
+    "section": "Hematopoiesis",
+    "question": "What is the correct chronological sequence of embryonic hematopoiesis sites?",
     "options": [
-      "Enveloped RNA viruses",
-      "Naked DNA viruses",
-      "Bacteriophages",
-      "All animal viruses"
+      "Yolk sac -> Liver -> Spleen -> Bone marrow",
+      "Yolk sac -> Spleen -> Liver -> Bone marrow",
+      "Liver -> Yolk sac -> Spleen -> Bone marrow",
+      "Yolk sac -> Liver -> Bone marrow -> Spleen"
     ],
-    "answer": "All animal viruses"
+    "answer": "Yolk sac -> Liver -> Spleen -> Bone marrow"
   },
   {
     "id": 3,
-    "section": "Virology - Bacteriophage",
-    "question": "During the lysogenic cycle of a temperate bacteriophage, the integrated viral DNA is maintained in what form?",
+    "section": "Hematopoiesis",
+    "question": "Which cell type in the marrow niche directly provides self-renewal signals via CXCL12?",
     "options": [
-      "Prophage",
-      "Provirus",
-      "Plasmid",
-      "Episome"
+      "CXCL12-abundant reticular cells",
+      "Endosteal osteoclasts",
+      "Sinusoidal endothelial cells",
+      "Sympathetic nerve fibers"
     ],
-    "answer": "Prophage"
+    "answer": "CXCL12-abundant reticular cells"
   },
   {
     "id": 4,
-    "section": "Virology - HIV",
-    "question": "Which HIV viral enzyme is responsible for slicing the host genomic DNA to insert the viral cDNA copy?",
+    "section": "Erythropoiesis",
+    "question": "At which stages does hemoglobin synthesis begin and nucleus extrusion occur?",
     "options": [
-      "Reverse transcriptase",
-      "Integrase",
-      "Protease",
-      "RNA polymerase II"
+      "Basophilic erythroblast; Orthochromatic erythroblast",
+      "Polychromatophilic erythroblast; Reticulocyte",
+      "Proerythroblast; Orthochromatic erythroblast",
+      "Basophilic erythroblast; Polychromatophilic erythroblast"
     ],
-    "answer": "Integrase"
+    "answer": "Basophilic erythroblast; Orthochromatic erythroblast"
   },
   {
     "id": 5,
-    "section": "Virology - Hepatitis",
-    "question": "Which hepatitis virus is a DNA virus that relies on a reverse transcriptase enzyme for its replication cycle?",
+    "section": "Erythropoiesis",
+    "question": "Which renal cells detect hypoxia to upregulate erythropoietin production?",
     "options": [
-      "Hepatitis A virus",
-      "Hepatitis B virus",
-      "Hepatitis C virus",
-      "Hepatitis D virus"
+      "Peritubular interstitial fibroblasts",
+      "Visceral podocytes",
+      "Macula densa cells",
+      "Glomerular mesangial cells"
     ],
-    "answer": "Hepatitis B virus"
+    "answer": "Peritubular interstitial fibroblasts"
   },
   {
     "id": 6,
-    "section": "RBC Morphology",
-    "question": "Which red blood cell morphological variant is characterized by evenly spaced, blunt spicules on the cell surface?",
+    "section": "Erythropoiesis",
+    "question": "What does New Methylene Blue stain to visualize reticulocytes?",
     "options": [
-      "Acanthocyte",
-      "Echinocyte",
-      "Schizocyte",
-      "Dacryocyte"
+      "Residual ribosomal RNA",
+      "Mitochondrial fragments",
+      "Ferritin aggregates",
+      "Nuclear remnants"
     ],
-    "answer": "Echinocyte"
+    "answer": "Residual ribosomal RNA"
   },
   {
     "id": 7,
-    "section": "RBC Morphology",
-    "question": "The presence of prominent Howell-Jolly bodies in a peripheral blood smear is most strongly associated with which condition?",
+    "section": "Anemia",
+    "question": "Which molecule blocks ferroportin to trap iron inside macrophages during chronic inflammation?",
     "options": [
-      "Lead poisoning",
-      "Hyposplenism",
-      "G6PD deficiency",
-      "Iron deficiency anemia"
+      "Hepcidin",
+      "Ferroportin",
+      "Transferrin receptor 2",
+      "Erythroferrone"
     ],
-    "answer": "Hyposplenism"
+    "answer": "Hepcidin"
   },
   {
     "id": 8,
-    "section": "RBC Morphology",
-    "question": "Which inclusion body is composed of denatured hemoglobin precipitates and requires a supravital stain to be visualized?",
+    "section": "Anemia",
+    "question": "Labs: Hb 9.2, MCV 64, RBC 5.8 x 10^12/L, RDW 13.5%. What is the diagnosis?",
     "options": [
-      "Pappenheimer body",
-      "Heinz body",
-      "Howell-Jolly body",
-      "Basophilic stippling"
+      "Beta-thalassemia minor",
+      "Iron deficiency anemia",
+      "Anemia of chronic disease",
+      "Sideroblastic anemia"
     ],
-    "answer": "Heinz body"
+    "answer": "Beta-thalassemia minor"
   },
   {
     "id": 9,
-    "section": "RBC Morphology",
-    "question": "A peripheral blood smear showing significant numbers of target cells (codocytes) is a classic hallmark of which disorder?",
+    "section": "Anemia",
+    "question": "Which blocked pathway causes neurological symptoms in pure Vitamin B12 deficiency?",
     "options": [
-      "Hereditary spherocytosis",
-      "Thalassemia major",
-      "Microangiopathic hemolytic anemia",
-      "Aplastic anemia"
+      "Methylmalonyl-CoA to Succinyl-CoA",
+      "Homocysteine to Methionine",
+      "5-methylTHF to THF",
+      "Ribonucleotide reductase pathway"
     ],
-    "answer": "Thalassemia major"
+    "answer": "Methylmalonyl-CoA to Succinyl-CoA"
   },
   {
     "id": 10,
-    "section": "RBC Morphology",
-    "question": "Basophilic stippling in red blood cells represents aggregates of which cellular component?",
+    "section": "Anemia",
+    "question": "A smear shows schistocytes and a platelet count of 32,000/µL. What must be ruled out immediately?",
     "options": [
-      "Precipitated iron",
-      "Ribosomal RNA",
-      "Nuclear remnants",
-      "Denatured globin chains"
+      "Thrombotic Thrombocytopenic Purpura",
+      "Immune Thrombocytopenic Purpura",
+      "Hereditary Spherocytosis",
+      "Autoimmune Hemolytic Anemia"
     ],
-    "answer": "Ribosomal RNA"
+    "answer": "Thrombotic Thrombocytopenic Purpura"
   },
   {
     "id": 11,
-    "section": "RBC Morphology",
-    "question": "Which red blood cell morphology is characterized by an irregular distribution of asymmetrical, sharp, pointed projections?",
+    "section": "Anemia",
+    "question": "A patient with a mechanical heart valve has low haptoglobin and hemosiderinuria. Identify the mechanism.",
     "options": [
-      "Echinocyte",
-      "Acanthocyte",
-      "Burr cell",
-      "Spherocyte"
+      "Microangiopathic intravascular hemolysis",
+      "Macrophage-mediated extravascular hemolysis",
+      "Complement-mediated intravascular hemolysis",
+      "Splenic sequestration"
     ],
-    "answer": "Acanthocyte"
+    "answer": "Microangiopathic intravascular hemolysis"
   },
   {
     "id": 12,
-    "section": "RBC Morphology",
-    "question": "Pappenheimer bodies are differentiated from Howell-Jolly bodies on a Romanowsky-stained smear by confirming their presence with which specific stain?",
+    "section": "Liver Function Test",
+    "question": "Labs: Total Bilirubin 12, Direct 10.5, ALP 450, ALT 55. Urine has bilirubin but no urobilinogen. Diagnosis?",
     "options": [
-      "Prussian blue",
-      "New methylene blue",
-      "Crystal violet",
-      "Periodic acid–Schiff"
+      "Choledocholithiasis",
+      "Acute Viral Hepatitis A",
+      "Gilbert Syndrome",
+      "Crigler-Najjar Syndrome Type I"
     ],
-    "answer": "Prussian blue"
+    "answer": "Choledocholithiasis"
   },
   {
     "id": 13,
-    "section": "RBC Morphology",
-    "question": "Which erythrocyte morphological shape change is typically seen as an artifact caused by prolonged storage of blood in EDTA?",
+    "section": "Liver Function Test",
+    "question": "Why is the AST:ALT ratio > 2:1 in alcoholic liver disease?",
     "options": [
-      "Spherocytosis",
-      "Echinocytosis",
-      "Schizocytosis",
-      "Stomatocytosis"
+      "Pyridoxal-5'-phosphate deficiency suppresses ALT synthesis",
+      "AST has a shorter half-life than ALT",
+      "Alcohol induces membrane-bound AST release",
+      "Centrilobular necrosis destroys ALT pools"
     ],
-    "answer": "Echinocytosis"
+    "answer": "Pyridoxal-5'-phosphate deficiency suppresses ALT synthesis"
   },
   {
     "id": 14,
-    "section": "RBC Morphology",
-    "question": "The presence of keratocytes (helmet cells) on a peripheral blood film is indicative of which pathological process?",
+    "section": "Liver Function Test",
+    "question": "What is the molecular defect in Gilbert Syndrome?",
     "options": [
-      "Immune-mediated destruction",
-      "Mechanical fragmentation",
-      "Abnormal lipid metabolism",
-      "Defective hemoglobin synthesis"
+      "Reduced activity of Bilirubin UGT1A1",
+      "Mutation in ABCC2 gene (MRP2)",
+      "Defect in SLCO1B1/SLCO1B3 transporters",
+      "Absence of hepatic ligandin"
     ],
-    "answer": "Mechanical fragmentation"
+    "answer": "Reduced activity of Bilirubin UGT1A1"
   },
   {
     "id": 15,
-    "section": "RBC Morphology",
-    "question": "Which red blood cell inclusion appears as fine, blue-purple, ring-like structures or figure-eights, representing remnants of the mitotic spindle?",
+    "section": "Liver Function Test",
+    "question": "Why is Prothrombin Time (PT) a better acute liver failure indicator than albumin?",
     "options": [
-      "Heinz body",
-      "Cabot ring",
-      "Howell-Jolly body",
-      "Pappenheimer body"
+      "Factor VII half-life is 4-6 hours; Albumin is 20 days",
+      "Albumin production is preserved by muscles",
+      "Factor VII is synthesized by endothelial cells",
+      "Albumin binds to acute-phase reactants"
     ],
-    "answer": "Cabot ring"
+    "answer": "Factor VII half-life is 4-6 hours; Albumin is 20 days"
   },
-  { 
+  {
     "id": 16,
-    "section": "Economy",
-    "question": "Which of the following best describes 'Core Inflation' as measured by central banks?",
+    "section": "Bacterial Identification",
+    "question": "An oxidase-positive, motile rod produces green pigment at 42°C. What is its key metabolic property?",
     "options": [
-      "A) Total inflation excluding food and energy price changes.",
-      "B) Total inflation including food and energy price changes.",
-      "C) The inflation rate of essential manufacturing goods only.",
-      "D) The inflation rate calculated using only wholesale prices."
+      "Oxidizes glucose but does not ferment it",
+      "Ferments lactose slowly",
+      "Produces H2S on TSI agar",
+      "Hydrolyzes urea rapidly"
     ],
-    "answer": "A) Total inflation excluding food and energy price changes."
+    "answer": "Oxidizes glucose but does not ferment it"
   },
   {
     "id": 17,
-    "section": "Organization",
-    "question": "Where is the permanent secretariat of the South Asian Association for Regional Cooperation (SAARC) located?",
+    "section": "Bacterial Identification",
+    "question": "KIA reaction is K/A with gas and heavy H2S. The colony is non-lactose fermenting. Identify the organism.",
     "options": [
-      "A) New Delhi, India",
-      "B) Dhaka, Bangladesh",
-      "C) Kathmandu, Nepal",
-      "D) Colombo, Sri Lanka"
+      "Salmonella enteritidis",
+      "Shigella dysenteriae",
+      "Proteus vulgaris",
+      "Escherichia coli"
     ],
-    "answer": "C) Kathmandu, Nepal"
+    "answer": "Salmonella enteritidis"
   },
   {
     "id": 18,
-    "section": "Book & Author",
-    "question": "Who wrote the famous economic treatise 'The General Theory of Employment, Interest and Money'?",
+    "section": "Bacterial Identification",
+    "question": "Which culture medium is highly selective for isolating Bordetella pertussis?",
     "options": [
-      "A) Adam Smith",
-      "B) John Maynard Keynes",
-      "C) David Ricardo",
-      "D) Milton Friedman"
+      "Bordet-Gengou agar",
+      "TCBS agar",
+      "Lowenstein-Jensen medium",
+      "Chocolate agar with V factor"
     ],
-    "answer": "B) John Maynard Keynes"
+    "answer": "Bordet-Gengou agar"
   },
   {
     "id": 19,
-    "section": "Important Day",
-    "question": "On which date is World Environment Day celebrated globally every year?",
+    "section": "Bacterial Identification",
+    "question": "What factors are required for the growth of Haemophilus influenzae?",
     "options": [
-      "A) June 5",
-      "B) July 5",
-      "C) June 15",
-      "D) April 22"
+      "X factor (Hemin) and V factor (NAD)",
+      "X factor and Coenzyme A",
+      "V factor and Vitamin K",
+      "Factor VIII and L-cysteine"
     ],
-    "answer": "A) June 5"
+    "answer": "X factor (Hemin) and V factor (NAD)"
   },
   {
     "id": 20,
-    "section": "Economy",
-    "question": "What does a 'Gini Coefficient' of 0 indicate in an economy?",
+    "section": "Bacterial Identification",
+    "question": "What is the mechanism of action of the Vibrio cholerae enterotoxin?",
     "options": [
-      "A) Complete inequality in income distribution.",
-      "B) Perfect equality in income distribution.",
-      "C) Zero economic growth and stagnant GDP.",
-      "D) Complete balance between imports and exports."
+      "ADP-riboxylation of Gs protein",
+      "Inhibition of protein synthesis via 28S rRNA",
+      "Cleavage of synaptobrevin",
+      "Inactivation of Gi protein"
     ],
-    "answer": "B) Perfect equality in income distribution."
-  }
+    "answer": "ADP-riboxylation of Gs protein"
+  },
+  {
+    "id": 21,
+    "section": "Fixative + Universal Precaution",
+    "question": "What is the formaldehyde gas percentage in 10% Neutral Buffered Formalin, and how does it fix tissue?",
+    "options": [
+      "4%; cross-linking amino groups via methylene bridges",
+      "10%; coagulating proteins by dehydration",
+      "37%; precipitating nucleic acids",
+      "1%; forming salt linkages"
+    ],
+    "answer": "4%; cross-linking amino groups via methylene bridges"
+  },
+  {
+    "id": 22,
+    "section": "Fixative + Universal Precaution",
+    "question": "A vaccinated tech gets a needle stick from an HBeAg+ patient. What is the immediate step?",
+    "options": [
+      "Test anti-HBs titers; if <10 mIU/mL, give HBIG + booster",
+      "Administer 3-dose vaccine series immediately",
+      "Give prophylactic tenofovir for 28 days",
+      "No action required due to vaccine history"
+    ],
+    "answer": "Test anti-HBs titers; if <10 mIU/mL, give HBIG + booster"
+  },
+  {
+    "id": 23,
+    "section": "Fixative + Universal Precaution",
+    "question": "Which fixative can replace 95% ethanol for Papanicolaou smear fixation without altering morphology?",
+    "options": [
+      "100% Methanol",
+      "10% Neutral Buffered Formalin",
+      "Bouin's Fluid",
+      "Carnoy's Fluid"
+    ],
+    "answer": "100% Methanol"
+  },
+  {
+    "id": 24,
+    "section": "Fixative + Universal Precaution",
+    "question": "What concentration of Sodium Hypochlorite and contact time are required to clean blood spills?",
+    "options": [
+      "10% solution (1:10) for 10–20 minutes",
+      "70% Isopropyl alcohol for 30 seconds",
+      "0.5% Chlorhexidine for 5 minutes",
+      "1% Glutaraldehyde for 2 minutes"
+    ],
+    "answer": "10% solution (1:10) for 10–20 minutes"
+  },
+  {
+    "id": 25,
+    "section": "Hemoglobin Estimation",
+    "question": "Why does leaving the Sahli mixture for 30 minutes instead of 10 minutes falsely elevate results?",
+    "options": [
+      "Acid hematin conversion is time-dependent and takes 45 minutes to maximize",
+      "Plasma proteins precipitate over time, creating turbidity",
+      "Atmospheric oxidation converts carboxyhemoglobin",
+      "Distilled water evaporates, concentrating the color"
+    ],
+"answer": "Acid hematin conversion is time-dependent and takes 45 minutes to maximize"
+},
+{
+"id": 26,
+"section": "Hemoglobin Estimation",
+"question": "How do you correct a falsely high Drabkin's hemoglobin reading caused by lipemic plasma?",
+"options": [
+"Centrifuge the mixture and read the supernatant",
+"Dilute Drabkin's reagent with distilled water",
+"Pre-warm the sample at 56°C for 10 minutes",
+"Blank the spectrophotometer using the lipemic plasma"
+],
+"answer": "Centrifuge the mixture and read the supernatant"
+},
+{
+"id": 27,
+"section": "Hemoglobin Estimation",
+"question": "What wavelength is used in the cyanmethemoglobin assay, and which hemoglobin form is unmeasured?",
+"options": [
+"540 nm; Sulfhemoglobin",
+"505 nm; Carboxyhemoglobin",
+"570 nm; Methemoglobin",
+"620 nm; Oxyhemoglobin"
+],
+"answer": "540 nm; Sulfhemoglobin"
+},
+{
+"id": 28,
+"section": "Coagulation",
+"question": "A sudden warfarin-induced spike in PT/INR is primarily due to the early depletion of which factor?",
+"options": [
+"Factor VII",
+"Factor IX",
+"Factor X",
+"Factor II"
+],
+"answer": "Factor VII"
+},
+{
+"id": 29,
+"section": "Coagulation",
+"question": "An asymptomatic male has an isolated APTT of 82s. A 1:1 mixing study fails to correct it. Diagnosis?",
+"options": [
+"Lupus Anticoagulant",
+"Factor VIII deficiency",
+"Factor XII deficiency",
+"Heparin contamination"
+],
+"answer": "Lupus Anticoagulant"
+},
+{
+"id": 30,
+"section": "Coagulation",
+"question": "What artifactual error occurs if a coagulation tube is only filled halfway?",
+"options": [
+"PT and APTT are falsely prolonged",
+"PT and APTT are falsely shortened",
+"PT is shortened; APTT is prolonged",
+"Results remain unaffected"
+],
+"answer": "PT and APTT are falsely prolonged"
+},
+{
+"id": 31,
+"section": "Coagulation",
+"question": "A newborn has prolonged PT and APTT, but normal TT and platelets. A mixing study corrects both. Deficiency?",
+"options": [
+"Factor X deficiency",
+"Factor XIII deficiency",
+"Factor VII deficiency",
+"Dysfibrinogenemia"
+],
+"answer": "Factor X deficiency"
+},
+{
+"id": 32,
+"section": "Coding-Decoding",
+"question": "If HEMATOPOIESIS is encrypted as IELDVRUMSMKX, how will ERYTHROPOIESIS be encoded?",
+"options": [
+"FUDUKSNVRMKX",
+"FTDUTSOVRMLY",
+"FTEVKSNVRMKX",
+"FUDUKSOVSNKY"
+],
+"answer": "FUDUKSNVRMKX"
+},
+{
+"id": 33,
+"section": "Coding-Decoding",
+"question": "If ANEMIA is coded as 1145131 and LIVER is 12922518, what is the code for FIXATIVE?",
+"options": [
+"69241209225",
+"69241199225",
+"69221209215",
+"69241208225"
+],
+"answer": "69241209225"
+},
+{
+"id": 34,
+"section": "Coding-Decoding",
+"question": "If 'Anemia diagnosed early' is '7x 2m 9p' and 'Early intervention works' is '9p 4k 3b', what is 'Anemia'?",
+"options": [
+"7x",
+"2m",
+"9p",
+"5r"
+],
+"answer": "7x"
+},
+{
+"id": 35,
+"section": "Coding-Decoding",
+"question": "If 'Fixative' means 'Staining' and 'Staining' means 'Centrifugation', what separates blood cells from plasma?",
+"options": [
+"Centrifugation",
+"Incubation",
+"Staining",
+"Disposal"
+],
+"answer": "Centrifugation"
+},
+{
+"id": 36,
+"section": "Coding-Decoding",
+"question": "If COAGULATION is encrypted as DPBHTMBSJPO, what is the decrypted form of BMFNJB?",
+"options": [
+"ANEMIA",
+"BLOOD",
+"CANCER",
+"ALBUMIN"
+],
+"answer": "ANEMIA"
+},
+{
+"id": 37,
+"section": "Puzzle",
+"question": "C is 3rd. Two samples sit between C and B. G is 1st. D is after G. A is right before F. Who is 4th?",
+"options": [
+"D",
+"E",
+"A",
+"F"
+],
+"answer": "D"
+},
+{
+"id": 38,
+"section": "Number Series",
+"question": "Complete the sequence: 4, 11, 30, 67, 128, ?",
+"options": [
+"219",
+"197",
+"215",
+"243"
+],
+"answer": "219"
+},
+{
+"id": 39,
+"section": "Odd One Out",
+"question": "Identify the odd term out: 343, 512, 729, 1000, 1331, 2197, 2744",
+"options": [
+"1331",
+"2197",
+"729",
+"2744"
+],
+"answer": "1331"
+},
+{
+"id": 40,
+"section": "Venn Diagram",
+"question": "Out of 120 techs, 65 use Hematology, 50 use Coagulation, and 25 use both. How many use neither?",
+"options": [
+"30",
+"20",
+"45",
+"15"
+],
+"answer": "30"
+},
+{
+"id": 41,
+"section": "Seating Arrangement",
+"question": "6 people sit in a circle. P is opposite R. Q is right of P. T is between P and S. Who is left of R?",
+"options": [
+"U",
+"Q",
+"S",
+"T"
+],
+"answer": "U"
+},
+{
+"id": 42,
+"section": "Percentage",
+"question": "A lab spends 40% budget on reagents, 30% of the rest on repair, and saves ₹42,000. Total budget?",
+"options": [
+"₹1,00,000",
+"₹1,20,000",
+"₹90,000",
+"₹1,40,000"
+],
+"answer": "₹1,00,000"
+},
+{
+"id": 43,
+"section": "Ratio & Proportion",
+"question": "A 640 mL mixture contains fixative, solvent, and water in a 3:5:8 ratio. What is the water volume?",
+"options": [
+"320 mL",
+"200 mL",
+"120 mL",
+"240 mL"
+],
+"answer": "320 mL"
+},
+{
+"id": 44,
+"section": "Time & Work",
+"question": "Tech A does 60 samples in 4h. Tech B does 60 in 6h. Working together, how long to finish 150 samples?",
+"options": [
+"6 hours",
+"5 hours",
+"4.5 hours",
+"7 hours"
+],
+"answer": "6 hours"
+},
+{
+"id": 45,
+"section": "History",
+"question": "Who discovered the ABO blood group system in 1900?",
+"options": [
+"Karl Landsteiner",
+"William Harvey",
+"Alexander Wiener",
+"Paul Ehrlich"
+],
+"answer": "Karl Landsteiner"
+}
 ];
-  export default questionsData;
+export default questionsData;
