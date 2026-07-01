@@ -6,6 +6,7 @@ import dotenv from 'dotenv';
 const app=express();
 app.use(express.json());
 import { GoogleGenAI } from '@google/genai';
+import { Type } from '@google/genai'; // Ensure Type is imported for Schema validation
 
 dotenv.config();
 
@@ -59,6 +60,75 @@ app.post("/submit", async (req, res) => {
     res.status(500).json({
       message: "Server error",
     });
+  }
+});
+
+
+app.post("/api/generate-questions", async (req, res) => {
+  try {
+    const { topic, numQuestions, difficulty } = req.body;
+
+    if (!process.env.GEMINI_API_KEY) {
+      return res.status(500).json({ error: "Gemini API configuration key missing on host." });
+    }
+
+    const prompt = `
+      You are an expert exam designer specializing in high-stakes competitive examinations. 
+      Generate a quiz containing exactly ${numQuestions} multiple-choice questions on the topic: "${topic}".
+      Target Skill Level: ${difficulty.toUpperCase()}.
+
+      CRITICAL QUESTION STYLE AND QUALITY RULES:
+      1. 🧠 Tricky & Brain-Storming: The questions must test conceptual depth, edge cases, or common misconceptions, not raw memorization.
+      2. ⚡ Concise & Short: Keep the question text short and direct. Avoid long paragraphs or wordy scenarios.
+      3. 🪤 Silly Mistake Traps: Design the questions to catch students who read too quickly or make superficial assumptions (e.g., swapping a sign, misinterpreting a absolute vs relative term, or missing a subtle logical constraint).
+      4. 🔍 Razor-Thin Options: All 4 choices must be incredibly close, highly plausible, and grammatically/structurally parallel. Distractors should represent the exact incorrect answers a student would get if they made a common calculation error or logical misstep.
+      5. 🎯 Absolute Accuracy: Exactly one choice must be undisputedly correct.
+
+      Divide the questions evenly across distinct sub-topics (assign these sub-topics to the "section" property field).
+    `;
+
+    // Strict schema to ensure the data format perfectly matches what your application uses
+    const questionSchema = {
+      type: Type.OBJECT,
+      properties: {
+        questions: {
+          type: Type.ARRAY,
+          items: {
+            type: Type.OBJECT,
+            properties: {
+              id: { type: Type.INTEGER },
+              section: { type: Type.STRING },
+              question: { type: Type.STRING },
+              options: {
+                type: Type.ARRAY,
+                items: { type: Type.STRING }
+              },
+              answer: { type: Type.STRING }
+            },
+            required: ["id", "section", "question", "options", "answer"],
+          }
+        }
+      },
+      required: ["questions"]
+    };
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: prompt,
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: questionSchema,
+      }
+    });
+
+    // Parse the strict JSON string coming from Gemini safely
+    const quizData = JSON.parse(response.text);
+    
+    res.json({ questions: quizData.questions });
+
+  } catch (error) {
+    console.error("AI Generation Error:", error);
+    res.status(500).json({ error: "Failed to generate dynamic AI questionnaire." });
   }
 });
 

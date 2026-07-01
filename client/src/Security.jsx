@@ -10,24 +10,13 @@ const ExamSecurityWrapper = ({
   const lockedRef = useRef(false);
   const lastTriggerRef = useRef(0);
 
-  // 🔥 ENTER FULLSCREEN (call this on exam start button click)
-  const enterFullScreen = async () => {
-    const elem = document.documentElement;
-
-    if (elem.requestFullscreen) await elem.requestFullscreen();
-    else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen();
-    else if (elem.msRequestFullscreen) elem.msRequestFullscreen();
-  };
-
   useEffect(() => {
     if (!active) return;
-
-    // 👉 Try entering fullscreen when active becomes true
-    enterFullScreen();
 
     const handleViolation = (reason = "Violation") => {
       const now = Date.now();
 
+      // Prevent alert loops firing multiple times simultaneously
       if (now - lastTriggerRef.current < 1500) return;
       lastTriggerRef.current = now;
 
@@ -40,45 +29,31 @@ const ExamSecurityWrapper = ({
 
       if (current >= maxViolations) {
         lockedRef.current = true;
-
         alert("❌ Too many violations! Auto submitting exam...");
-
         setTimeout(() => {
           onAutoSubmit && onAutoSubmit();
         }, 300);
       }
     };
 
-    // ✅ TAB SWITCH
     const handleVisibilityChange = () => {
       if (document.hidden) {
         handleViolation("Tab switch detected");
       }
     };
 
-    // ✅ FULLSCREEN EXIT DETECTION (IMPORTANT)
     const handleFullscreenChange = () => {
-      if (!document.fullscreenElement) {
+      if (!document.fullscreenElement && !lockedRef.current) {
         handleViolation("Fullscreen exited");
       }
     };
 
-    // 🚫 RIGHT CLICK
     const disableRightClick = (e) => e.preventDefault();
-
-    // 🚫 COPY / PASTE / CUT
     const disableCopyPaste = (e) => e.preventDefault();
-
-    // 🚫 SHORTCUTS (add ESC tracking carefully)
     const disableShortcuts = (e) => {
-      if (
-        e.ctrlKey &&
-        ["c", "v", "x", "u", "s"].includes(e.key.toLowerCase())
-      ) {
+      if (e.ctrlKey && ["c", "v", "x", "u", "s"].includes(e.key.toLowerCase())) {
         e.preventDefault();
       }
-
-      // ⚠️ ESC → usually exits fullscreen → already handled
     };
 
     document.addEventListener("visibilitychange", handleVisibilityChange);
