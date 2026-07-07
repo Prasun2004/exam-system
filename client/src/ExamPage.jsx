@@ -177,7 +177,7 @@ export default function ExamPage() {
         <div className="card">
           <div className="header">
             <div>
-              <p>{topic} Test</p>
+              {/* <p>{topic} Test</p> */}
               <h3>Section {currentSection + 1} / {totalSections}</h3>
               <div className="timer">⏱ {formatTime(timeLeft)}</div>
             </div>

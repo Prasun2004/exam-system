@@ -106,7 +106,7 @@ export default function CreateTest() {
                 type="number" 
                 value={numQuestions} 
                 onChange={(e) => setNumQuestions(Number(e.target.value))}
-                style={{ width: "100%", padding: "10px", marginTop: "5px", borderRadius: "4px", border: "1px solid #ccc" ,overflow:"hidden" }}
+                style={{ width: "80%", padding: "10px", marginTop: "5px", borderRadius: "4px", border: "1px solid #ccc" ,overflow:"hidden" }}
               />
             </div>
           </div>
