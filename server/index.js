@@ -30,7 +30,7 @@ connectDB();
 
 app.post("/submit", async (req, res) => {
   try {
-    const { topic, marks, percentage,details,sectionStats } = req.body;
+    const { topic, marks, percentage,details,sectionStats,difficulty } = req.body;
 
     // validation
     if (!topic || marks === undefined || !percentage) {
@@ -45,7 +45,8 @@ app.post("/submit", async (req, res) => {
       marks,
       percentage,
       details,
-      sectionStats
+      sectionStats,
+      difficulty
     });
 
     await newResult.save();

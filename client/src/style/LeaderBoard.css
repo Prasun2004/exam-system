@@ -25,7 +25,18 @@ th {
   background: #222;
   color: white;
 }
-
+.topic-cell {
+  display: -webkit-box;
+  -webkit-line-clamp: 3; /* Show only 3 lines */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-break: break-word;
+  line-height: 1.4;
+  max-width: 250px; /* Adjust as needed */
+  margin: 0 auto;
+  cursor: pointer;
+}
 tr:nth-child(even) {
   background: #f5f5f5;
 }

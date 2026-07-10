@@ -10,6 +10,7 @@ export default function ExamPage() {
   
   const questionsData = location.state?.customQuestions || []; 
   const totalTime = location.state?.totalTime || 2400;
+  const difficulty=location.state?.difficulty || "";
   const topic = location.state?.topic || "";
 
   const totalQuestions = questionsData.length;
@@ -103,6 +104,7 @@ export default function ExamPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           topic,
+          difficulty,
           marks: resultData.scoreRaw,
           percentage: resultData.percentage,
           details: resultData.detailedResults,

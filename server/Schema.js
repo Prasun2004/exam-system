@@ -9,6 +9,11 @@ const resultSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
+  difficulty: {
+    type: String,
+   
+    enum: ["easy", "medium", "hard"],
+  },
   percentage: {
     type: String,
     required: true,

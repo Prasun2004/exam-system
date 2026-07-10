@@ -35,6 +35,7 @@ export default function LeaderBoard() {
             <th>Rank</th>
             <th>Test Name</th>
             <th>Marks</th>
+            <th>Mode</th>
             <th>Percentage</th>
             <th>Date</th>
             <th>Action</th>
@@ -46,10 +47,14 @@ export default function LeaderBoard() {
             <tr key={item._id}>
               <td>{index + 1}</td>
 
-              <td>{item.topic}</td>
+             <td>
+  <div className="topic-cell" title={item.topic}>
+    {item.topic}
+  </div>
+</td>
 
               <td>{item.marks}</td>
-
+               <td>{item.difficulty || "None"}</td>
               <td>{item.percentage}%</td>
 
               <td>

@@ -43,7 +43,7 @@ export default function CreateTest() {
         
         // Pass the manually created test configuration to your ExamPage
         navigate("/exam", { 
-          state: { topic, totalTime, customQuestions: parsedQuestions } 
+          state: { topic, totalTime,difficulty, customQuestions: parsedQuestions } 
         });
       } catch (err) {
         setError("Invalid JSON format. Please ensure it is an array of question objects.");
@@ -61,7 +61,7 @@ export default function CreateTest() {
         console.log(response.data);
         // Redirect directly to your test room with the fresh AI questions
         navigate("/exam", { 
-          state: { topic, totalTime, customQuestions: response.data.questions } 
+          state: { topic, totalTime,difficulty, customQuestions: response.data.questions } 
         });
       } catch (err) {
         console.error(err);
@@ -101,13 +101,16 @@ export default function CreateTest() {
               />
             </div>
             <div style={{ width:"100%", overflow:"hidden" }}>
-              <label style={{ fontWeight: "bold" }}>No. of Questions:</label>
-              <input 
-                type="number" 
-                value={numQuestions} 
-                onChange={(e) => setNumQuestions(Number(e.target.value))}
-                style={{ width: "80%", padding: "10px", marginTop: "5px", borderRadius: "4px", border: "1px solid #ccc" ,overflow:"hidden" }}
-              />
+              <label style={{ display: "block", fontWeight: "bold", marginBottom: "5px" }}>Target Complexity Level:</label>
+              <select 
+                value={difficulty} 
+                onChange={(e) => setDifficulty(e.target.value)}
+                style={{ width: "100%", padding: "10px", borderRadius: "4px", border: "1px solid #ccc" }}
+              >
+                <option value="easy">🟢 Easy (Foundational Concepts)</option>
+                <option value="medium">🟡 Medium (Intermediate Evaluation)</option>
+                <option value="hard">🔴 Hard (Advanced Logical Deductions)</option>
+              </select>
             </div>
           </div>
 
@@ -145,16 +148,13 @@ export default function CreateTest() {
             </div>
           ) : (
             <div style={{ marginBottom: "20px", background: "#f3f0ff", padding: "15px", borderRadius: "6px" }}>
-              <label style={{ display: "block", fontWeight: "bold", marginBottom: "5px" }}>Target Complexity Level:</label>
-              <select 
-                value={difficulty} 
-                onChange={(e) => setDifficulty(e.target.value)}
-                style={{ width: "100%", padding: "10px", borderRadius: "4px", border: "1px solid #ccc" }}
-              >
-                <option value="easy">🟢 Easy (Foundational Concepts)</option>
-                <option value="medium">🟡 Medium (Intermediate Evaluation)</option>
-                <option value="hard">🔴 Hard (Advanced Logical Deductions)</option>
-              </select>
+              <label style={{ fontWeight: "bold" }}>No. of Questions:</label>
+              <input 
+                type="number" 
+                value={numQuestions} 
+                onChange={(e) => setNumQuestions(Number(e.target.value))}
+                style={{ width: "80%", padding: "10px", marginTop: "5px", borderRadius: "4px", border: "1px solid #ccc" ,overflow:"hidden" }}
+              />
             </div>
           )}
 
