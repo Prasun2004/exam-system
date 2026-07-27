@@ -183,9 +183,20 @@ export default function ExamPage() {
               <h3>Section {currentSection + 1} / {totalSections}</h3>
               <div className="timer">⏱ {formatTime(timeLeft)}</div>
             </div>
-            <button className="section-btn" onClick={handleNextSection}>
+            {/* <button className="section-btn" onClick={handleNextSection}>
               {currentSection === totalSections - 1 ? "Submit Test" : "Next Section"}
-            </button>
+            </button> */}
+            <button
+  className="section-btn"
+  onClick={handleNextSection}
+  disabled={timeLeft > 0}
+>
+  {currentSection === totalSections - 1
+    ? "Submit Test"
+    : timeLeft > 0
+    ? `Next Section (${formatTime(timeLeft)})`
+    : "Next Section"}
+</button>
           </div>
 
           <div className="question">

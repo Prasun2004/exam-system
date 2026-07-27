@@ -73,20 +73,23 @@ app.post("/api/generate-questions", async (req, res) => {
       return res.status(500).json({ error: "Gemini API configuration key missing on host." });
     }
 
-    const prompt = `
-      You are an expert exam designer specializing in high-stakes competitive examinations. 
-      Generate a quiz containing exactly ${numQuestions} multiple-choice questions on the topic: "${topic}".
-      Target Skill Level: ${difficulty.toUpperCase()}.
+   const prompt = `
+You are an expert exam designer specializing in high-stakes competitive medical laboratory examinations (e.g., AIIMS CRE, RRB Paramedical, WBHRB, and State LT exams).
 
-      CRITICAL QUESTION STYLE AND QUALITY RULES:
-      1. 🧠 Tricky & Brain-Storming: The questions must test conceptual depth, edge cases, or common misconceptions, not raw memorization.
-      2. ⚡ Concise & Short: Keep the question text short and direct. Avoid long paragraphs or wordy scenarios.
-      3. 🪤 Silly Mistake Traps: Design the questions to catch students who read too quickly or make superficial assumptions (e.g., swapping a sign, misinterpreting a absolute vs relative term, or missing a subtle logical constraint).
-      4. 🔍 Razor-Thin Options: All 4 choices must be incredibly close, highly plausible, and grammatically/structurally parallel. Distractors should represent the exact incorrect answers a student would get if they made a common calculation error or logical misstep.
-      5. 🎯 Absolute Accuracy: Exactly one choice must be undisputedly correct.
+Generate a quiz containing exactly ${numQuestions} multiple-choice questions on the topic: "${topic}".
+Target Skill Level: ${difficulty.toUpperCase()}.
 
-      Divide the questions evenly across distinct sub-topics (assign these sub-topics to the "section" property field).
-    `;
+CRITICAL QUESTION STYLE AND QUALITY RULES (Based on AIIMS CRE / MLT Past Papers):
+1. ⚡ Direct, Short & One-Liner Style: Keep questions concise, short, and to the point. Avoid lengthy clinical vignettes or wordy scenario descriptions unless strictly necessary for a calculation.
+2. 🧠 Conceptual Traps & Edge Cases: Test technical accuracy, subtle distinctions (e.g., Direct vs. Indirect Coombs, specific fixatives, exact dye/reagent names), and clinical edge cases rather than trivial recall.
+3. 🪤 Silly-Mistake Traps: Design options to catch candidates who read too fast (e.g., confusing "Except" clauses, interchanging unit scales like nm vs µm, or swapping pre-analytical vs analytical error types).
+4. 🔍 Razor-Thin & Plausible Distractors: All 4 choices must be concise, grammatically parallel, and highly plausible. Distractors must represent exact incorrect steps or misinterpretations commonly made in a lab setting (e.g., wrong tube additive for a test, wrong BMW color bag, or incorrect path enzymes).
+5. 🎯 Absolute Accuracy: Exactly one option must be undisputedly correct.
+6. 📐 Precise Numerical & Lab Calculations: When including calculation-based questions (e.g., Molarity, Normality, Dilutions, GFR, or Cell Counts), ensure distractors reflect common arithmetic errors (e.g., forgetting molecular weight division or off-by-10 decimal errors).
+
+Sub-Topic Distribution:
+Divide the questions evenly across distinct sub-topics within "${topic}" and assign these sub-topic names to the "section" property field in the output JSON/object.
+`;
 
     // Strict schema to ensure the data format perfectly matches what your application uses
     const questionSchema = {
