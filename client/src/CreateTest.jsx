@@ -1,101 +1,172 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import "./style/LandingPage.css";
+import React, { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
-const topicData = {
-  Technical: {
-    "Clinical Biochemistry": [
-      "Biomolecules", "Enzymes", "Carbohydrate Metabolism", "Protein Metabolism",
-      "Lipid Metabolism", "Water & Electrolyte Balance", "Acid-Base Balance",
-      "Vitamins & Minerals", "Clinical Enzymology", "Cardiac Markers",
-      "Liver Function Test (LFT)", "Renal Function Test (RFT)", "Endocrine Function Test",
-      "Quality Control & Quality Assurance", "Laboratory Instruments"
-    ],
-    Hematology: [
-      "Structure & Function of Blood", "RBC Indices & ESR", "WBC & Differential Count",
-      "Hemoglobinopathies", "Anemias", "Bleeding Disorders", "Coagulation & Anticoagulants",
-      "Platelets & Platelet Disorders", "Bone Marrow Examination", "Blood Grouping & Rh Typing",
-      "Cross Matching", "Transfusion Medicine", "Hematology Analyzers"
-    ],
-    Microbiology: [
-      "General Microbiology", "Bacteriology", "Culture Media", "Sterilization",
-      "Biochemical Tests", "Immunology", "Serology", "Parasitology", "Mycology",
-      "Mycobacteriology", "Virology"
-    ],
-    "Clinical Pathology": [
-      "Urine Examination", "Stool Examination", "Body Fluids", "Semen Analysis",
-      "Pregnancy Tests", "Occult Blood Test"
-    ],
-    "Cytopathology & Histopathology": [
-      "Fixatives", "Tissue Processing", "Microtomy", "Staining Techniques",
-      "Frozen Section", "Cytology", "Biopsy"
-    ],
-    "Immunohematology & Transfusion Medicine": [
-      "ABO Blood Group", "Rh Blood Group", "Blood Components", "Component Separation",
-      "Blood Storage", "Compatibility Testing", "Hemolytic Disease of Newborn",
-      "Transfusion Reactions"
-    ],
-    "Molecular Biology & Biotechnology": [
-      "DNA", "RNA", "PCR", "ELISA", "Blotting Techniques", "Gene Cloning"
-    ],
-    "Laboratory Management": [
-      "Laboratory Safety", "Biomedical Waste Management", "Quality Assurance",
-      "NABL", "Ethics", "Documentation"
-    ],
-    "Anatomy, Physiology & Health Education": [
-      "Cell", "Tissues", "Blood", "Digestive System", "Respiratory System",
-      "Cardiovascular System", "Urinary System", "Nervous System", "Health Education"
-    ],
-    "Instrumentation & Techniques": [
-      "Microscope", "Centrifuge", "Colorimeter", "Spectrophotometer",
-      "Auto Analyzer", "Electrophoresis"
-    ],
-    "Computer Application in Laboratory": [
-      "Computer Basics", "MS Office", "Laboratory Information System (LIS)",
-      "Internet", "Medical Records"
-    ]
-  },
-  "Non-Technical": {
-    "General Knowledge & Aptitude": [
-      "History", "Geography", "Indian Polity", "Economics",
-      "General Science", "Current Affairs", "Computer Awareness"
-    ],
-    Mathematics: [
-      "Number System", "Simplification", "Percentage", "Ratio & Proportion",
-      "Average", "Profit & Loss", "Simple Interest", "Compound Interest",
-      "Time & Work", "Time, Speed & Distance", "Data Interpretation"
-    ],
-    Reasoning: [
-      "Analogy", "Classification", "Series", "Coding-Decoding", "Blood Relation",
-      "Direction Sense", "Puzzle", "Seating Arrangement", "Syllogism",
-      "Statement & Conclusion"
-    ]
-  }
+const syllabus = {
+  tech: [
+    {
+      topic: "Clinical Biochemistry",
+      subtopics: [
+        "Biomolecules", "Enzymes", "Carbohydrate Metabolism", "Protein Metabolism",
+        "Lipid Metabolism", "Water & Electrolyte Balance", "Acid-Base Balance",
+        "Vitamins & Minerals", "Clinical Enzymology", "Cardiac Markers",
+        "Liver Function Test (LFT)", "Renal Function Test (RFT)", "Endocrine Function Test",
+        "Quality Control & Quality Assurance", "Laboratory Instruments"
+      ]
+    },
+    {
+      topic: "Hematology",
+      subtopics: [
+        "Structure & Function of Blood", "RBC Indices & ESR", "WBC & Differential Count",
+        "Hemoglobinopathies", "Anemias", "Bleeding Disorders", "Coagulation & Anticoagulants",
+        "Platelets & Platelet Disorders", "Bone Marrow Examination", "Blood Grouping & Rh Typing",
+        "Cross Matching", "Transfusion Medicine", "Hematology Analyzers"
+      ]
+    },
+    {
+      topic: "Microbiology",
+      subtopics: [
+        "General Microbiology", "Bacteriology", "Culture Media", "Sterilization",
+        "Biochemical Tests", "Immunology", "Serology", "Parasitology", "Mycology",
+        "Mycobacteriology", "Virology", "Infection Control", "Biosafety",
+        "Antimicrobial Susceptibility Testing (AST)"
+      ]
+    },
+    {
+      topic: "Clinical Pathology",
+      subtopics: [
+        "Urine Examination", "Stool Examination", "Semen Analysis", "Body Fluids",
+        "Cerebrospinal Fluid (CSF)", "Synovial Fluid", "Pleural Fluid", "Ascitic Fluid",
+        "Gastric Fluid", "Sputum Examination", "Routine & Special Investigations"
+      ]
+    },
+    {
+      topic: "Cytopathology & Histopathology",
+      subtopics: [
+        "Cell Structure & Function", "Cytological Techniques", "Staining Methods",
+        "Fine Needle Aspiration Cytology (FNAC)", "Exfoliative Cytology",
+        "Histopathological Techniques", "Tissue Processing", "Embedding & Sectioning",
+        "Routine & Special Stains", "Immunohistochemistry"
+      ]
+    },
+    {
+      topic: "Immunohematology & Transfusion Medicine",
+      subtopics: [
+        "Blood Group Systems", "Antigen & Antibody", "Compatibility Testing",
+        "Cross Matching", "Aplastic Anemia", "Hemolytic Disease", "Blood Components",
+        "Blood Storage", "Transfusion Reactions"
+      ]
+    },
+    {
+      topic: "Molecular Biology & Biotechnology",
+      subtopics: [
+        "Structure of DNA & RNA", "DNA Replication", "Transcription", "Translation",
+        "PCR & Applications", "Restriction Enzymes", "Gel Electrophoresis",
+        "Blotting Techniques", "Recombinant DNA Technology", "ELISA",
+        "Genetic Engineering", "DNA Fingerprinting"
+      ]
+    },
+    {
+      topic: "Laboratory Management",
+      subtopics: [
+        "Laboratory Organization", "Safety Measures", "Quality Control & Quality Assurance",
+        "Laboratory Instruments & Maintenance", "Record Keeping",
+        "Sample Collection & Handling", "Biomedical Waste Management"
+      ]
+    },
+    {
+      topic: "Anatomy, Physiology & Health Education",
+      subtopics: [
+        "Human Anatomy", "Human Physiology", "Blood Circulation", "Respiratory System",
+        "Digestive System", "Endocrine System", "Reproductive System", "Nervous System",
+        "Health Education", "Community Health"
+      ]
+    },
+    {
+      topic: "Instrumentation & Techniques",
+      subtopics: [
+        "Microscope & Types", "Centrifuge & Uses", "Colorimeter", "Spectrophotometer",
+        "Hematology Analyzers", "Biochemistry Analyzers", "ELISA Reader", "PCR Machine",
+        "pH Meter", "Other Laboratory Equipment"
+      ]
+    }
+  ],
+  nonTech: [
+    {
+      topic: "General Knowledge & Aptitude",
+      subtopics: [
+        "General Science", "Current Affairs", "Indian Polity", "Indian Geography",
+        "Indian History", "General Awareness", "Logical Reasoning",
+        "Quantitative Aptitude", "English Language"
+      ]
+    },
+    {
+      topic: "Computer Application in Laboratory",
+      subtopics: [
+        "MS Office (Word, Excel, PowerPoint)", "Laboratory Software",
+        "Data Entry & Management", "Internet & Email", "Basic Computer Knowledge",
+        "Information Technology in Laboratory"
+      ]
+    },
+    {
+      topic: "MATH",
+      subtopics: [
+        "Percentage", "Ratio & Proportion", "Time & Work", "Time, Speed & Distance",
+        "Number System", "Profit & Loss", "Simple & Compound Interest", "Average",
+        "Simplification", "Data Interpretation"
+      ]
+    },
+    {
+      topic: "REASONING",
+      subtopics: [
+        "Analogy", "Classification", "Series", "Coding-Decoding", "Blood Relations",
+        "Direction Sense Test", "Ranking & Order", "Alphabet Test", "Number & Letter Series",
+        "Odd One Out", "Syllogism", "Statement & Conclusion", "Statement & Assumption",
+        "Statement & Argument", "Assertion & Reason", "Cause & Effect", "Venn Diagram",
+        "Puzzle", "Seating Arrangement", "Logical Reasoning", "Non-Verbal Reasoning"
+      ]
+    },
+    {
+      topic: "ENGLISH",
+      subtopics: [
+        "Preposition", "Articles", "Tenses", "Active & Passive Voice",
+        "Direct & Indirect Speech", "Modals", "Auxiliary Verbs", "Sentence Correction",
+        "Error Detection", "Synonyms", "Antonyms", "One Word Substitution",
+        "Idioms & Phrases", "Phrasal Verbs", "Spelling Correction", "Vocabulary",
+        "Word Formation", "Confusing Words"
+      ]
+    }
+  ]
 };
+
+const convertedSyllabus = {
+  Technical: {},
+  "Non-Technical": {}
+};
+syllabus.tech.forEach((item) => {
+  convertedSyllabus.Technical[item.topic] = item.subtopics;
+});
+syllabus.nonTech.forEach((item) => {
+  convertedSyllabus["Non-Technical"][item.topic] = item.subtopics;
+});
 
 export default function CreateTest() {
   const navigate = useNavigate();
 
-  // ===== States =====
   const [examType, setExamType] = useState("CRE");
-  const [topic, setTopic] = useState("");
   const [totalTime, setTotalTime] = useState(2400);
-  const [numQuestions, setNumQuestions] = useState(5);
+  const [numQuestions, setNumQuestions] = useState(20);
   const [creationMode, setCreationMode] = useState("manual");
   const [manualJson, setManualJson] = useState("");
   const [difficulty, setDifficulty] = useState("medium");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-
   const [category, setCategory] = useState("Technical");
-  const [subject, setSubject] = useState(Object.keys(topicData["Technical"])[0]);
+  const [subject, setSubject] = useState(Object.keys(convertedSyllabus["Technical"])[0]);
   const [selectedSubTopics, setSelectedSubTopics] = useState([]);
   const [showSubTopics, setShowSubTopics] = useState(false);
-
   const dropdownRef = useRef(null);
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
@@ -106,48 +177,48 @@ export default function CreateTest() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Clean selected topics when subject/category changes
-  useEffect(() => {
-    setSelectedSubTopics((prev) =>
-      prev.filter((item) => topicData[category][subject]?.includes(item))
-    );
-  }, [category, subject]);
-
   const handleSubTopicChange = (item) => {
     setSelectedSubTopics((prev) =>
       prev.includes(item) ? prev.filter((t) => t !== item) : [...prev, item]
     );
   };
 
-  const handleSelectAll = () => {
-    setSelectedSubTopics([...topicData[category][subject]]);
+  const removeSubTopic = (item) => {
+    setSelectedSubTopics((prev) => prev.filter((t) => t !== item));
+  };
+
+  const handleSelectAllCurrent = () => {
+    const current = convertedSyllabus[category][subject] || [];
+    setSelectedSubTopics((prev) => {
+      const newOnes = current.filter((t) => !prev.includes(t));
+      return [...prev, ...newOnes];
+    });
   };
 
   const handleClearAll = () => {
     setSelectedSubTopics([]);
   };
 
-  const leaderboard = () => {
-    navigate("/leaderboard");
+  const buildTopicString = () => {
+    if (selectedSubTopics.length === 0) {
+      return `${category} - ${subject}`;
+    }
+    return `${category} | ${selectedSubTopics.join(" • ")}`;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!topic.trim()) {
-      alert("Please enter a test topic.");
-      return;
-    }
-
     setIsLoading(true);
     setError("");
+
+    const topic = buildTopicString();
 
     if (creationMode === "manual") {
       try {
         const parsedQuestions = JSON.parse(manualJson);
         if (!Array.isArray(parsedQuestions)) throw new Error("Must be an array");
-
         navigate("/exam", {
-          state: { topic, totalTime, difficulty, customQuestions: parsedQuestions },
+          state: { topic, totalTime, difficulty, examType, customQuestions: parsedQuestions },
         });
       } catch (err) {
         setError("Invalid JSON format. Please ensure it is an array of question objects.");
@@ -159,10 +230,19 @@ export default function CreateTest() {
           topic,
           numQuestions,
           difficulty,
+          examType,
+          category,
+          subject,
+          subTopics: selectedSubTopics,
         });
-
         navigate("/exam", {
-          state: { topic, totalTime, difficulty, customQuestions: response.data.questions },
+          state: {
+            topic,
+            totalTime,
+            difficulty,
+            examType,
+            customQuestions: response.data.questions,
+          },
         });
       } catch (err) {
         console.error(err);
@@ -174,409 +254,286 @@ export default function CreateTest() {
   };
 
   return (
-    <div className="app-container" style={{ padding: "40px 20px", flexDirection: "column" }}>
-      <div
-        className="card"
-        style={{ maxWidth: "700px", margin: "0 auto", textAlign: "left", marginBottom: "5px" }}
-      >
-        <h2 style={{ textAlign: "center", marginBottom: "20px" }}>🛠️ Quiz Creator Studio</h2>
+    <div className="min-h-screen w-full bg-gray-100 py-6 px-4 sm:px-6 lg:px-8">
+      <div className="w-full max-w-7xl mx-auto">
+        <div className="bg-white rounded-2xl shadow-lg p-6 sm:p-8">
+          <h1 className="text-2xl sm:text-3xl font-bold text-center text-gray-800 mb-8">
+            🛠️ Quiz Creator Studio
+          </h1>
 
-        <form onSubmit={handleSubmit}>
-          {/* Exam Type */}
-          <div style={{ marginBottom: "20px" }}>
-            <label>
-              <b>Exam</b>
-            </label>
-            <div style={{ display: "flex", gap: "10px", marginTop: "8px" }}>
-              <button
-                type="button"
-                onClick={() => setExamType("CRE")}
-                className={examType === "CRE" ? "active-btn" : ""}
-              >
-                CRE
-              </button>
-              <button
-                type="button"
-                onClick={() => setExamType("RRB")}
-                className={examType === "RRB" ? "active-btn" : ""}
-              >
-                RRB
-              </button>
-            </div>
-          </div>
-
-          {/* Category / Subject / Sub Topics */}
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr 1.4fr",
-              gap: "20px",
-              alignItems: "start",
-              marginBottom: "24px",
-            }}
-          >
-            {/* Category */}
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* ===== EXAM TYPE - RADIO BUTTONS ===== */}
             <div>
-              <label style={{ display: "block", fontWeight: 600, marginBottom: 6, fontSize: 14 }}>
-                Category
-              </label>
-              <select
-                value={category}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  setCategory(value);
-                  setSubject(Object.keys(topicData[value])[0]);
-                  setSelectedSubTopics([]);
-                }}
-                style={{
-                  width: "100%",
-                  height: "44px",
-                  padding: "0 12px",
-                  border: "1px solid #d1d5db",
-                  borderRadius: "8px",
-                  fontSize: 14,
-                  background: "#fff",
-                }}
-              >
-                <option value="Technical">🖥️ Technical</option>
-                <option value="Non-Technical">📘 Non-Technical</option>
-              </select>
+              <label className="block text-sm font-semibold text-gray-700 mb-3">Exam</label>
+              <div className="flex items-center gap-8">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="examType"
+                    value="CRE"
+                    checked={examType === "CRE"}
+                    onChange={() => setExamType("CRE")}
+                    className="w-4 h-4 text-blue-600 focus:ring-blue-500"
+                  />
+                  <span className="text-sm font-medium text-gray-800">CRE</span>
+                </label>
+
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="examType"
+                    value="RRB"
+                    checked={examType === "RRB"}
+                    onChange={() => setExamType("RRB")}
+                    className="w-4 h-4 text-blue-600 focus:ring-blue-500"
+                  />
+                  <span className="text-sm font-medium text-gray-800">RRB</span>
+                </label>
+              </div>
             </div>
 
-            {/* Subject */}
-            <div>
-              <label style={{ display: "block", fontWeight: 600, marginBottom: 6, fontSize: 14 }}>
-                Subject
-              </label>
-              <select
-                value={subject}
-                onChange={(e) => {
-                  setSubject(e.target.value);
-                  setSelectedSubTopics([]);
-                }}
-                style={{
-                  width: "100%",
-                  height: "44px",
-                  padding: "0 12px",
-                  border: "1px solid #d1d5db",
-                  borderRadius: "8px",
-                  fontSize: 14,
-                  background: "#fff",
-                }}
-              >
-                {Object.keys(topicData[category]).map((item) => (
-                  <option key={item} value={item}>
-                    {item}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Sub Topics */}
-            <div style={{ position: "relative" }} ref={dropdownRef}>
-              <label style={{ display: "block", fontWeight: 600, marginBottom: 6, fontSize: 14 }}>
-                Select Sub Topics
-              </label>
-
-              <div
-                onClick={() => setShowSubTopics(!showSubTopics)}
-                style={{
-                  width: "100%",
-                  minHeight: "44px",
-                  border: "1px solid #d1d5db",
-                  borderRadius: "8px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  padding: "8px 12px",
-                  cursor: "pointer",
-                  background: "#fff",
-                }}
-              >
-                <div style={{ flex: 1, overflow: "hidden" }}>
-                  {selectedSubTopics.length === 0 ? (
-                    <span style={{ color: "#9ca3af", fontSize: 14 }}>Select Sub Topics</span>
-                  ) : (
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
-                      {selectedSubTopics.slice(0, 3).map((item) => (
-                        <span
-                          key={item}
-                          style={{
-                            background: "#e0f2fe",
-                            color: "#0369a1",
-                            fontSize: 12,
-                            padding: "2px 8px",
-                            borderRadius: "12px",
-                            whiteSpace: "nowrap",
-                          }}
-                        >
-                          {item}
-                        </span>
-                      ))}
-                      {selectedSubTopics.length > 3 && (
-                        <span
-                          style={{
-                            background: "#f3f4f6",
-                            color: "#4b5563",
-                            fontSize: 12,
-                            padding: "2px 8px",
-                            borderRadius: "12px",
-                          }}
-                        >
-                          +{selectedSubTopics.length - 3} more
-                        </span>
-                      )}
-                    </div>
-                  )}
-                </div>
-                <span style={{ marginLeft: 8, color: "#6b7280", fontSize: 12 }}>
-                  {showSubTopics ? "▲" : "▼"}
-                </span>
+            {/* ===== CATEGORY + SUBJECT + SUBTOPICS ===== */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+              {/* Category */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Category</label>
+                <select
+                  value={category}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setCategory(val);
+                    setSubject(Object.keys(convertedSyllabus[val])[0]);
+                  }}
+                  className="w-full h-11 px-3 rounded-xl border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="Technical">🖥️ Technical</option>
+                  <option value="Non-Technical">📘 Non-Technical</option>
+                </select>
               </div>
 
-              {showSubTopics && (
-                <div
-                  style={{
-                    position: "absolute",
-                    top: "100%",
-                    left: 0,
-                    right: 0,
-                    marginTop: 6,
-                    background: "#fff",
-                    border: "1px solid #e5e7eb",
-                    borderRadius: "10px",
-                    boxShadow: "0 10px 25px -5px rgba(0,0,0,0.1)",
-                    zIndex: 1000,
-                    overflow: "hidden",
-                  }}
+              {/* Subject */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Subject</label>
+                <select
+                  value={subject}
+                  onChange={(e) => setSubject(e.target.value)}
+                  className="w-full h-11 px-3 rounded-xl border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      padding: "10px 14px",
-                      borderBottom: "1px solid #f3f4f6",
-                      background: "#f9fafb",
-                    }}
-                  >
-                    <span style={{ fontSize: 13, fontWeight: 600, color: "#374151" }}>
-                      {selectedSubTopics.length} selected
-                    </span>
-                    <div style={{ display: "flex", gap: 12 }}>
-                      <button
-                        type="button"
-                        onClick={handleSelectAll}
-                        style={{
-                          background: "none",
-                          border: "none",
-                          color: "#2563eb",
-                          fontSize: 13,
-                          cursor: "pointer",
-                          fontWeight: 500,
-                        }}
-                      >
-                        Select All
-                      </button>
-                      <button
-                        type="button"
-                        onClick={handleClearAll}
-                        style={{
-                          background: "none",
-                          border: "none",
-                          color: "#dc2626",
-                          fontSize: 13,
-                          cursor: "pointer",
-                          fontWeight: 500,
-                        }}
-                      >
-                        Clear
-                      </button>
+                  {Object.keys(convertedSyllabus[category]).map((item) => (
+                    <option key={item} value={item}>
+                      {item}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Sub Topics Dropdown */}
+              <div className="relative" ref={dropdownRef}>
+                <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                  Select Sub Topics
+                </label>
+
+                <div
+                  onClick={() => setShowSubTopics(!showSubTopics)}
+                  className="w-full min-h-[44px] px-3 py-2 rounded-xl border border-gray-300 bg-white cursor-pointer flex items-center justify-between"
+                >
+                  <span className="text-sm text-gray-500">
+                    {selectedSubTopics.length === 0
+                      ? "Click to select sub topics..."
+                      : `${selectedSubTopics.length} sub topic(s) selected`}
+                  </span>
+                  <span className="text-gray-400 text-xs">{showSubTopics ? "▲" : "▼"}</span>
+                </div>
+
+                {showSubTopics && (
+                  <div className="absolute z-50 mt-2 w-full bg-white border border-gray-200 rounded-xl shadow-xl overflow-hidden">
+                    <div className="flex items-center justify-between px-4 py-2.5 bg-gray-50 border-b">
+                      <span className="text-sm font-semibold text-gray-700">
+                        {selectedSubTopics.length} selected
+                      </span>
+                      <div className="flex gap-3">
+                        <button
+                          type="button"
+                          onClick={handleSelectAllCurrent}
+                          className="text-xs font-medium text-blue-600 hover:text-blue-800"
+                        >
+                          Select All (this subject)
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleClearAll}
+                          className="text-xs font-medium text-red-600 hover:text-red-800"
+                        >
+                          Clear All
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="max-h-64 overflow-y-auto py-1">
+                      {(convertedSyllabus[category][subject] || []).map((item) => (
+                        <label
+                          key={item}
+                          className="flex items-center px-4 py-2.5 hover:bg-gray-50 cursor-pointer text-sm"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={selectedSubTopics.includes(item)}
+                            onChange={() => handleSubTopicChange(item)}
+                            className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500 mr-3"
+                          />
+                          {item}
+                        </label>
+                      ))}
                     </div>
                   </div>
+                )}
+              </div>
+            </div>
 
-                  <div style={{ maxHeight: "240px", overflowY: "auto", padding: "6px 0" }}>
-                    {topicData[category][subject].map((item) => (
-                      <label
-                        key={item}
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          padding: "10px 14px",
-                          cursor: "pointer",
-                          fontSize: 14,
-                        }}
-                        onMouseEnter={(e) => (e.currentTarget.style.background = "#f3f4f6")}
-                        onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={selectedSubTopics.includes(item)}
-                          onChange={() => handleSubTopicChange(item)}
-                          style={{
-                            width: 16,
-                            height: 16,
-                            marginRight: 10,
-                            accentColor: "#2563eb",
-                            cursor: "pointer",
-                          }}
-                        />
-                        {item}
-                      </label>
-                    ))}
-                  </div>
+            {/* ===== SELECTED SUB TOPICS - SEPARATE PLACE ===== */}
+            {selectedSubTopics.length > 0 && (
+              <div className="bg-sky-50 border border-sky-200 rounded-xl p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-sm font-semibold text-sky-800">
+                    Selected Sub Topics ({selectedSubTopics.length})
+                  </h3>
+                  <button
+                    type="button"
+                    onClick={handleClearAll}
+                    className="text-xs font-medium text-red-600 hover:text-red-800"
+                  >
+                    Clear All
+                  </button>
                 </div>
-              )}
-            </div>
-          </div>
 
-          {/* Time + Difficulty */}
-          <div style={{ display: "flex", gap: "15px", marginBottom: "20px" }}>
-            <div style={{ width: "100%" }}>
-              <label style={{ fontWeight: "bold" }}>Total Time (seconds):</label>
-              <input
-                type="number"
-                value={totalTime}
-                onChange={(e) => setTotalTime(Number(e.target.value))}
-                style={{
-                  width: "100%",
-                  padding: "10px",
-                  marginTop: "5px",
-                  borderRadius: "4px",
-                  border: "1px solid #ccc",
-                }}
-              />
+                <div className="flex flex-wrap gap-2">
+                  {selectedSubTopics.map((item) => (
+                    <span
+                      key={item}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm bg-sky-100 text-sky-800 border border-sky-200"
+                    >
+                      {item}
+                      <button
+                        type="button"
+                        onClick={() => removeSubTopic(item)}
+                        className="ml-1 text-sky-600 hover:text-red-600 font-bold text-base leading-none"
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* ===== TIME + DIFFICULTY ===== */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                  Total Time (seconds)
+                </label>
+                <input
+                  type="number"
+                  value={totalTime}
+                  onChange={(e) => setTotalTime(Number(e.target.value))}
+                  className="w-full h-11 px-3 rounded-xl border border-gray-300 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                  Target Complexity Level
+                </label>
+                <select
+                  value={difficulty}
+                  onChange={(e) => setDifficulty(e.target.value)}
+                  className="w-full h-11 px-3 rounded-xl border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="easy">🟢 Easy</option>
+                  <option value="medium">🟡 Medium</option>
+                  <option value="hard">🔴 Hard</option>
+                </select>
+              </div>
             </div>
-            <div style={{ width: "100%" }}>
-              <label style={{ display: "block", fontWeight: "bold", marginBottom: "5px" }}>
-                Target Complexity Level:
-              </label>
-              <select
-                value={difficulty}
-                onChange={(e) => setDifficulty(e.target.value)}
-                style={{
-                  width: "100%",
-                  padding: "10px",
-                  borderRadius: "4px",
-                  border: "1px solid #ccc",
-                }}
+
+            {/* ===== MODE SWITCHER ===== */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <button
+                type="button"
+                onClick={() => setCreationMode("manual")}
+                className={`py-3 rounded-xl font-semibold text-sm transition ${
+                  creationMode === "manual"
+                    ? "bg-green-600 text-white shadow"
+                    : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                }`}
               >
-                <option value="easy">🟢 Easy</option>
-                <option value="medium">🟡 Medium</option>
-                <option value="hard">🔴 Hard</option>
-              </select>
+                ✍️ Manual JSON Field
+              </button>
+              <button
+                type="button"
+                onClick={() => setCreationMode("ai")}
+                className={`py-3 rounded-xl font-semibold text-sm transition ${
+                  creationMode === "ai"
+                    ? "bg-purple-600 text-white shadow"
+                    : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                }`}
+              >
+                ✨ Smart AI Generation
+              </button>
             </div>
-          </div>
 
-          {/* Mode Switcher */}
-          <div style={{ display: "flex", gap: "10px", marginBottom: "25px" }}>
+            {/* ===== CONDITIONAL AREA ===== */}
+            {creationMode === "manual" ? (
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                  Paste Array Data (JSON format)
+                </label>
+                <textarea
+                  rows={7}
+                  value={manualJson}
+                  onChange={(e) => setManualJson(e.target.value)}
+                  placeholder={`[\n  {\n    "id": 1,\n    "section": "General",\n    "question": "Sample Question Text?",\n    "options": ["A", "B", "C", "D"],\n    "answer": "A"\n  }\n]`}
+                  className="w-full px-4 py-3 rounded-xl border border-gray-300 font-mono text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-y"
+                />
+              </div>
+            ) : (
+              <div className="bg-purple-50 border border-purple-200 rounded-xl p-5">
+                <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                  No. of Questions
+                </label>
+                <input
+                  type="number"
+                  min={5}
+                  max={100}
+                  value={numQuestions}
+                  onChange={(e) => setNumQuestions(Number(e.target.value))}
+                  className="w-full h-11 px-3 rounded-xl border border-purple-300 text-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                />
+              </div>
+            )}
+
+            {error && <p className="text-red-600 font-medium text-sm">{error}</p>}
+
             <button
-              type="button"
-              onClick={() => setCreationMode("manual")}
-              style={{
-                flex: 1,
-                backgroundColor: creationMode === "manual" ? "#4CAF50" : "#ccc",
-                padding: "10px",
-                border: "none",
-                borderRadius: "6px",
-                color: "white",
-                fontWeight: "bold",
-                cursor: "pointer",
-              }}
-            >
-              ✍️ Manual JSON Field
-            </button>
-            <button
-              type="button"
-              onClick={() => setCreationMode("ai")}
-              style={{
-                flex: 1,
-                backgroundColor: creationMode === "ai" ? "#6a11cb" : "#ccc",
-                padding: "10px",
-                border: "none",
-                borderRadius: "6px",
-                color: "white",
-                fontWeight: "bold",
-                cursor: "pointer",
-              }}
-            >
-              ✨ Smart AI Generation
-            </button>
-          </div>
-
-          {/* Conditional Area */}
-          {creationMode === "manual" ? (
-            <div style={{ marginBottom: "20px" }}>
-              <label style={{ display: "block", fontWeight: "bold" }}>
-                Paste Array Data (JSON format):
-              </label>
-              <textarea
-                rows="8"
-                placeholder={`[\n  {\n    "id": 1,\n    "section": "General",\n    "question": "Sample Question Text?",\n    "options": ["A", "B", "C", "D"],\n    "answer": "A"\n  }\n]`}
-                value={manualJson}
-                onChange={(e) => setManualJson(e.target.value)}
-                style={{
-                  width: "100%",
-                  fontFamily: "monospace",
-                  padding: "10px",
-                  marginTop: "5px",
-                  borderRadius: "4px",
-                  border: "1px solid #ccc",
-                }}
-              />
-            </div>
-          ) : (
-            <div
-              style={{
-                marginBottom: "20px",
-                background: "#f3f0ff",
-                padding: "15px",
-                borderRadius: "6px",
-              }}
-            >
-              <label style={{ fontWeight: "bold" }}>No. of Questions:</label>
-              <input
-                type="number"
-                value={numQuestions}
-                onChange={(e) => setNumQuestions(Number(e.target.value))}
-                style={{
-                  width: "100%",
-                  padding: "10px",
-                  marginTop: "5px",
-                  borderRadius: "4px",
-                  border: "1px solid #ccc",
-                }}
-              />
-            </div>
-          )}
-
-          {error && <p style={{ color: "red", fontWeight: "bold" }}>{error}</p>}
-
-          <button
-            type="submit"
-            disabled={isLoading}
-            style={{
-              width: "100%",
-              padding: "12px",
-              background:
+              type="submit"
+              disabled={isLoading}
+              className={`w-full py-3.5 rounded-xl font-bold text-white text-base transition ${
                 creationMode === "ai"
-                  ? "linear-gradient(135deg, #6a11cb, #2575fc)"
-                  : "#4CAF50",
-              color: "white",
-              border: "none",
-              borderRadius: "5px",
-              fontWeight: "bold",
-              cursor: "pointer",
-            }}
-          >
-            {isLoading ? "Assembling Your Test Workspace..." : "🚀 Launch Configured Test"}
-          </button>
-        </form>
-      </div>
+                  ? "bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+                  : "bg-green-600 hover:bg-green-700"
+              } ${isLoading ? "opacity-70 cursor-not-allowed" : ""}`}
+            >
+              {isLoading ? "Assembling Your Test Workspace..." : "🚀 Launch Configured Test"}
+            </button>
+          </form>
+        </div>
 
-      <button onClick={leaderboard} className="submit-btn">
-        LeaderBoard
-      </button>
+        <button
+          onClick={() => navigate("/leaderboard")}
+          className="mt-5 w-full py-3.5 rounded-xl font-bold text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 transition"
+        >
+          LeaderBoard
+        </button>
+      </div>
     </div>
   );
 }
