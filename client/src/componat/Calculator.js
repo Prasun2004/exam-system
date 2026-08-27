@@ -1,8 +1,9 @@
-export const calculateResult = (questionsData, answers) => {
+export const calculateResult = (questionsData, answers, examType) => {
   let correct = 0;
   let wrong = 0;
   let attempted = 0;
 
+  const negativemark = examType == "RRB" ? 0.33 : 0.25;
   const sectionStats = {};
 
   const detailedResults = questionsData.map((q) => {
@@ -54,24 +55,13 @@ export const calculateResult = (questionsData, answers) => {
 
   Object.keys(sectionStats).forEach((section) => {
     const sec = sectionStats[section];
-
-    sec.percentage = (
-      (sec.correct / sec.total) *
-      100
-    ).toFixed(2);
+    sec.percentage = Number(((sec.correct / sec.total) * 100).toFixed(2));
   });
 
   const totalQuestions = questionsData.length;
-
-  const unattempted =
-    totalQuestions - attempted;
-
-  const scoreRaw = correct - wrong / 4;
-
-  const percentage = (
-    (scoreRaw / totalQuestions) *
-    100
-  ).toFixed(2);
+  const unattempted = totalQuestions - attempted;
+  const scoreRaw = correct - wrong * negativemark;
+  const percentage = Number(((scoreRaw / totalQuestions) * 100).toFixed(2));
 
   return {
     correct,

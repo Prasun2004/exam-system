@@ -67,31 +67,75 @@ app.post("/submit", async (req, res) => {
 
 app.post("/api/generate-questions", async (req, res) => {
   try {
-    const { topic, numQuestions, difficulty } = req.body;
+    const { subjects, numQuestions, difficulty, examType } = req.body;
 
     if (!process.env.GEMINI_API_KEY) {
       return res.status(500).json({ error: "Gemini API configuration key missing on host." });
     }
 
-   const prompt = `
-You are an expert exam designer specializing in high-stakes competitive medical laboratory examinations (e.g., AIIMS CRE, RRB Paramedical, WBHRB, and State LT exams).
+    const totalCount = Number(numQuestions) || 20;
 
-Generate a quiz containing exactly ${numQuestions} multiple-choice questions on the topic: "${topic}".
-Target Skill Level: ${difficulty.toUpperCase()}.
+    // 1. Determine Category Weighting based on examType
+    let techRatio = 0.8;
+    let nonTechRatio = 0.2;
 
-CRITICAL QUESTION STYLE AND QUALITY RULES (Based on AIIMS CRE / MLT Past Papers):
-1. ⚡ Direct, Short & One-Liner Style: Keep questions concise, short, and to the point. Avoid lengthy clinical vignettes or wordy scenario descriptions unless strictly necessary for a calculation.
-2. 🧠 Conceptual Traps & Edge Cases: Test technical accuracy, subtle distinctions (e.g., Direct vs. Indirect Coombs, specific fixatives, exact dye/reagent names), and clinical edge cases rather than trivial recall.
-3. 🪤 Silly-Mistake Traps: Design options to catch candidates who read too fast (e.g., confusing "Except" clauses, interchanging unit scales like nm vs µm, or swapping pre-analytical vs analytical error types).
-4. 🔍 Razor-Thin & Plausible Distractors: All 4 choices must be concise, grammatically parallel, and highly plausible. Distractors must represent exact incorrect steps or misinterpretations commonly made in a lab setting (e.g., wrong tube additive for a test, wrong BMW color bag, or incorrect path enzymes).
-5. 🎯 Absolute Accuracy: Exactly one option must be undisputedly correct.
-6. 📐 Precise Numerical & Lab Calculations: When including calculation-based questions (e.g., Molarity, Normality, Dilutions, GFR, or Cell Counts), ensure distractors reflect common arithmetic errors (e.g., forgetting molecular weight division or off-by-10 decimal errors).
+    if (examType && examType.toUpperCase() === "RRB") {
+      techRatio = 0.7;
+      nonTechRatio = 0.3;
+    }
 
-Sub-Topic Distribution:
-Divide the questions evenly across distinct sub-topics within "${topic}" and assign these sub-topic names to the "section" property field in the output JSON/object.
+    // 2. Extract technical and non-technical sub-topics
+    const techSubTopics = [];
+    const nonTechSubTopics = [];
+
+    (subjects || []).forEach(sub => {
+      const category = (sub.category || "").toLowerCase();
+      const subList = Array.isArray(sub.subTopics) ? sub.subTopics : [];
+
+      if (category.includes("non-technical") || category.includes("non_technical")) {
+        nonTechSubTopics.push(...subList);
+      } else {
+        techSubTopics.push(...subList);
+      }
+    });
+
+    // 3. Calculate target counts based on availability
+    let techCount = 0;
+    let nonTechCount = 0;
+
+    if (techSubTopics.length > 0 && nonTechSubTopics.length > 0) {
+      techCount = Math.round(totalCount * techRatio);
+      nonTechCount = totalCount - techCount;
+    } else if (techSubTopics.length > 0) {
+      techCount = totalCount;
+    } else {
+      nonTechCount = totalCount;
+    }
+
+    // 4. Construct syllabus specification string
+    let syllabusInstructions = "";
+    if (techCount > 0) {
+      syllabusInstructions += `\n- Technical Questions: EXACTLY ${techCount} questions distributed across these sub-topics: ${techSubTopics.join(", ")}`;
+    }
+    if (nonTechCount > 0) {
+      syllabusInstructions += `\n- Non-Technical Questions: EXACTLY ${nonTechCount} questions distributed across these sub-topics: ${nonTechSubTopics.join(", ")}`;
+    }
+
+    // 5. Dynamic Prompt with sub-topic sectioning
+    const prompt = `
+You are an expert exam designer for the competitive examination: ${examType}.
+
+Generate exactly ${totalCount} multiple-choice questions matching the Target Difficulty: ${(difficulty || "MEDIUM").toUpperCase()}.
+
+Syllabus & Weightage Distribution Requirements:${syllabusInstructions}
+
+CRITICAL RULES:
+1. Ground questions strictly on the specified sub-topics above.
+2. For every question, set the "section" property EXACTLY to the name of the sub-topic it belongs to (e.g., "General Microbiology", "Analogy").
+3. Include 4 distinct, plausible options per question, with exactly one unambiguously correct answer.
+4. Keep questions concise and formatted in typical competitive exam one-liner style.
 `;
 
-    // Strict schema to ensure the data format perfectly matches what your application uses
     const questionSchema = {
       type: Type.OBJECT,
       properties: {
@@ -109,7 +153,7 @@ Divide the questions evenly across distinct sub-topics within "${topic}" and ass
               },
               answer: { type: Type.STRING }
             },
-            required: ["id", "section", "question", "options", "answer"],
+            required: ["id", "section", "question", "options", "answer"]
           }
         }
       },
@@ -117,17 +161,15 @@ Divide the questions evenly across distinct sub-topics within "${topic}" and ass
     };
 
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
+      model: "gemini-2.5-flash",
       contents: prompt,
       config: {
         responseMimeType: "application/json",
-        responseSchema: questionSchema,
+        responseSchema: questionSchema
       }
     });
 
-    // Parse the strict JSON string coming from Gemini safely
     const quizData = JSON.parse(response.text);
-    
     res.json({ questions: quizData.questions });
 
   } catch (error) {
@@ -135,7 +177,6 @@ Divide the questions evenly across distinct sub-topics within "${topic}" and ass
     res.status(500).json({ error: "Failed to generate dynamic AI questionnaire." });
   }
 });
-
 const ai = new GoogleGenAI({
   apiKey: process.env.GEMINI_API_KEY
 });
