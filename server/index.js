@@ -64,7 +64,6 @@ app.post("/submit", async (req, res) => {
   }
 });
 
-
 app.post("/api/generate-questions", async (req, res) => {
   try {
     const { subjects, numQuestions, difficulty, examType } = req.body;
@@ -121,7 +120,7 @@ app.post("/api/generate-questions", async (req, res) => {
       syllabusInstructions += `\n- Non-Technical Questions: EXACTLY ${nonTechCount} questions distributed across these sub-topics: ${nonTechSubTopics.join(", ")}`;
     }
 
-    // 5. Dynamic Prompt with sub-topic sectioning
+    // 5. Updated Prompt with strict ordering and mixing rules
     const prompt = `
 You are an expert exam designer for the competitive examination: ${examType}.
 
@@ -129,11 +128,13 @@ Generate exactly ${totalCount} multiple-choice questions matching the Target Dif
 
 Syllabus & Weightage Distribution Requirements:${syllabusInstructions}
 
-CRITICAL RULES:
-1. Ground questions strictly on the specified sub-topics above.
-2. For every question, set the "section" property EXACTLY to the name of the sub-topic it belongs to (e.g., "General Microbiology", "Analogy").
-3. Include 4 distinct, plausible options per question, with exactly one unambiguously correct answer.
-4. Keep questions concise and formatted in typical competitive exam one-liner style.
+ORDERING & STRUCTURING RULES:
+1. All Technical questions (${techCount}) must be placed FIRST in the array, followed by all Non-Technical questions (${nonTechCount}) at the END.
+2. INTERLEAVE / SHUFFLE SUB-TOPICS:
+   - Within the Technical section: Do NOT group questions by the same sub-topic together. Interleave them so consecutive questions come from DIFFERENT technical sub-topics.
+   - Within the Non-Technical section: Do NOT group questions by the same sub-topic together. Interleave them across the non-technical sub-topics.
+3. For every question, set the "section" property EXACTLY to the name of the sub-topic it belongs to.
+4. Provide 4 distinct options per question with exactly one correct answer. Keep questions concise and formatted in competitive exam one-liner style.
 `;
 
     const questionSchema = {
@@ -170,7 +171,28 @@ CRITICAL RULES:
     });
 
     const quizData = JSON.parse(response.text);
-    res.json({ questions: quizData.questions });
+    let questions = quizData.questions || [];
+
+    // Optional Safety Net: Guarantee sub-topic shuffling in JS while keeping Tech first and Non-Tech last
+    const techSet = new Set(techSubTopics);
+    const techQuestions = questions.filter(q => techSet.has(q.section));
+    const nonTechQuestions = questions.filter(q => !techSet.has(q.section));
+
+    const shuffleArray = (arr) => {
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    };
+
+    // Reassemble: shuffled technical first, shuffled non-technical second, re-indexed IDs
+    const finalQuestions = [...shuffleArray(techQuestions), ...shuffleArray(nonTechQuestions)].map((q, idx) => ({
+      ...q,
+      id: idx + 1
+    }));
+
+    res.json({ questions: finalQuestions });
 
   } catch (error) {
     console.error("AI Generation Error:", error);
