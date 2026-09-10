@@ -1,8 +1,6 @@
 import './App.css';
-import Question from './Question';
-import LandingPage from './LandingPage';
 import Answer from './Answer';
-import { Routes, Route, Link } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import ExamPage from './ExamPage';
 import LeaderBoard from './LeaderBoard';
 import CreateTest from './CreateTest';

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import "./style/Answer.css";
+//import "./style/Answer.css";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 
@@ -100,11 +100,11 @@ export default function ResultPage() {
       {/* NEW AI ANALYSIS DISPLAY SECTION */}
       {(isAiLoading || aiAnalysis || aiError) && (
         <div className="ai-analysis-section">
-          <h3>🧠 AI Performance Insight</h3>
-          {isAiLoading && <div className="loader">AI is crunching your score stats...</div>}
+          <h3 style={{color:"black"}}>🧠 AI Performance Insight</h3>
+          {isAiLoading && <div style={{color:"black"}}>AI is crunching your score stats...</div>}
           {aiError && <p className="error-text">{aiError}</p>}
           {aiAnalysis && (
-            <div className="ai-response-box">
+            <div style={{backgroundColor:"white"}}>
               {/* If your backend returns markdown text, whitespace wrapping will preserve structure */}
               <p style={{ whiteSpace: "pre-line" }}>{aiAnalysis}</p>
             </div>
