@@ -33,9 +33,22 @@ app.post("/submit", async (req, res) => {
     const { topic, marks, percentage,details,sectionStats,difficulty } = req.body;
 
     // validation
-    if (!topic || marks === undefined || !percentage) {
+     if (!subjects) {
       return res.status(400).json({
-        message: "All fields are required",
+        message: "Subject is required",
+      });
+    }
+
+    if (marks === undefined || marks === null) {
+      return res.status(400).json({
+        message: "Marks are required",
+      });
+    }
+
+    // IMPORTANT: 0 is a valid percentage
+    if (percentage === undefined || percentage === null) {
+      return res.status(400).json({
+        message: "Percentage is required",
       });
     }
 
@@ -121,6 +134,34 @@ app.post("/api/generate-questions", async (req, res) => {
     }
 
     // 5. Updated Prompt with strict ordering and mixing rules
+   // Determine exam-specific style and difficulty nuances
+    const isCRE = examType && examType.toUpperCase() === "CRE";
+    const isRRB = examType && examType.toUpperCase() === "RRB";
+
+    let examSpecificRules = "";
+
+    if (isCRE) {
+      examSpecificRules = `
+EXAM SPECIFIC GUIDELINES (CRE):
+- Overall Tone: Grounded in foundational concepts, direct standard theory, and basic memory recall.
+- Difficulty Calibration:
+  * "EASY": Direct textbook definitions, standard terminology, fundamental laws, and direct one-liners.
+  * "MEDIUM": Core conceptual questions requiring direct application of known rules/syntax/facts without twist.
+  * "HARD": Slightly deeper syllabus depth or edge cases, but strictly limited and straightforward.
+- STRICT NEGATIVE CONSTRAINT FOR CRE:
+  * ZERO calculation-based or numerical problem-solving questions in the technical section (0% tolerance).
+  * ZERO multi-line scenario/case-based questions. All questions must be clean, direct conceptual queries.`;
+    } else if (isRRB) {
+      examSpecificRules = `
+EXAM SPECIFIC GUIDELINES (RRB):
+- Overall Tone: Tougher, analytical, competitive, and designed to test elimination skills.
+- Difficulty Baseline:
+  * RRB "EASY" must match or exceed the difficulty of a CRE "MEDIUM".
+  * Questions must include deceptive/tricky options, nuanced wording, exceptions to standard rules, and trap distractors.
+  * Technical questions should test precise operational knowledge, practical specifications, boundary conditions, and short calculations where relevant.`;
+    }
+
+    // 5. Updated Prompt with strict exam tailoring
     const prompt = `
 You are an expert exam designer for the competitive examination: ${examType}.
 
@@ -128,13 +169,15 @@ Generate exactly ${totalCount} multiple-choice questions matching the Target Dif
 
 Syllabus & Weightage Distribution Requirements:${syllabusInstructions}
 
+${examSpecificRules}
+
 ORDERING & STRUCTURING RULES:
 1. All Technical questions (${techCount}) must be placed FIRST in the array, followed by all Non-Technical questions (${nonTechCount}) at the END.
 2. INTERLEAVE / SHUFFLE SUB-TOPICS:
-   - Within the Technical section: Do NOT group questions by the same sub-topic together. Interleave them so consecutive questions come from DIFFERENT technical sub-topics.
-   - Within the Non-Technical section: Do NOT group questions by the same sub-topic together. Interleave them across the non-technical sub-topics.
+   - Within Technical: Interleave questions across different technical sub-topics (no consecutive duplicates where possible).
+   - Within Non-Technical: Interleave questions across different non-technical sub-topics.
 3. For every question, set the "section" property EXACTLY to the name of the sub-topic it belongs to.
-4. Provide 4 distinct options per question with exactly one correct answer. Keep questions concise and formatted in competitive exam one-liner style.
+4. Provide 4 distinct options per question with exactly one indisputably correct answer. Keep stems concise and formatted in standard competitive exam style.
 `;
 
     const questionSchema = {

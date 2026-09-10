@@ -95,14 +95,13 @@ export default function ExamPage() {
 
   const sendToAPI = async (resultData) => {
     try {
-      // topic = all subject names joined (Technical + Non-Technical)
+      // topic = all subTopics joined
       const topic = subjects
-        .map((s) => s.subject)
+        .flatMap((s) => s.subTopics || [])
         .filter(Boolean)
         .join(", ");
 
       const payload = {
-        subjects,
         difficulty,
         examType,
         topic,
