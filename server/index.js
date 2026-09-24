@@ -33,9 +33,9 @@ app.post("/submit", async (req, res) => {
     const { topic, marks, percentage,details,sectionStats,difficulty } = req.body;
 
     // validation
-     if (!subjects) {
+     if (!topic) {
       return res.status(400).json({
-        message: "Subject is required",
+        message: "Topic is required",
       });
     }
 
