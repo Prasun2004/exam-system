@@ -150,6 +150,13 @@ syllabus.nonTech.forEach((item) => {
   convertedSyllabus["Non-Technical"][item.topic] = item.subtopics;
 });
 
+// Thresholds: score must be >= this to unlock NEW topics
+const DIFFICULTY_THRESHOLDS = {
+  easy: 80,
+  medium: 70,
+  hard: 63,
+};
+
 export default function CreateTest() {
   const navigate = useNavigate();
 
@@ -164,7 +171,6 @@ export default function CreateTest() {
   const [error, setError] = useState("");
 
   // Final grouped subjects that will be sent
-  // Structure: [{ category, subject: "A, B", subTopics: [...] }]
   const [subjects, setSubjects] = useState([]);
 
   // Temporary selection
@@ -173,6 +179,115 @@ export default function CreateTest() {
   const [selectedSubTopics, setSelectedSubTopics] = useState([]);
   const [showSubTopics, setShowSubTopics] = useState(false);
   const dropdownRef = useRef(null);
+
+  // ===== Leaderboard restriction state =====
+  const [lastDayExams, setLastDayExams] = useState([]); // exams from the most recent date
+  const [restrictToSameTopics, setRestrictToSameTopics] = useState(false);
+  const [allowedSubTopics, setAllowedSubTopics] = useState([]); // when restricted
+  const [lastExamInfo, setLastExamInfo] = useState(null); // for UI message
+
+  // ---------- Fetch leaderboard & decide restriction ----------
+  const fetchLeaderboard = async () => {
+  try {
+    const res = await axios.get("http://localhost:8080/leaderboard");
+    const data = Array.isArray(res.data) ? res.data : res.data?.data || [];
+
+    if (!data.length) {
+      setRestrictToSameTopics(false);
+      setAllowedSubTopics([]);
+      setLastExamInfo(null);
+      return;
+    }
+
+    // Sort oldest → newest so we can walk history
+    const sortedAsc = [...data].sort(
+      (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
+    );
+
+    // Find the most recent exam that failed the threshold
+    // (we walk from newest to oldest)
+    const sortedDesc = [...sortedAsc].reverse();
+
+    let failingExam = null;
+    let failingIndexInAsc = -1;
+
+    for (let i = 0; i < sortedDesc.length; i++) {
+      const exam = sortedDesc[i];
+      const pct = parseFloat(exam.percentage);
+      const diff = (exam.difficulty || "medium").toLowerCase();
+      const threshold = DIFFICULTY_THRESHOLDS[diff] ?? 70;
+
+      if (!isNaN(pct) && pct < threshold) {
+        failingExam = exam;
+        // find its position in the ascending list
+        failingIndexInAsc = sortedAsc.findIndex((e) => e._id === exam._id);
+        break;
+      }
+    }
+
+    // No failing exam found → fully unlocked
+    if (!failingExam) {
+      setRestrictToSameTopics(false);
+      setAllowedSubTopics([]);
+      setLastExamInfo(null);
+      return;
+    }
+
+    const restrictedTopics = (failingExam.topic || "")
+      .split(",")
+      .map((t) => t.trim())
+      .filter(Boolean);
+
+    // Collect ALL topics practiced in exams AFTER the failing one
+    const laterExams = sortedAsc.slice(failingIndexInAsc + 1);
+    const practicedAfter = new Set();
+    laterExams.forEach((exam) => {
+      (exam.topic || "")
+        .split(",")
+        .map((t) => t.trim())
+        .filter(Boolean)
+        .forEach((t) => practicedAfter.add(t));
+    });
+
+    // Topics that still have NOT been practiced after the failing exam
+    const stillLocked = restrictedTopics.filter((t) => !practicedAfter.has(t));
+
+    if (stillLocked.length === 0) {
+      // User has practiced EVERY restricted topic → clear restriction
+      setRestrictToSameTopics(false);
+      setAllowedSubTopics([]);
+      setLastExamInfo({
+        topic: failingExam.topic,
+        difficulty: failingExam.difficulty,
+        percentage: failingExam.percentage,
+        passed: true, // treated as unlocked
+        threshold: DIFFICULTY_THRESHOLDS[(failingExam.difficulty || "medium").toLowerCase()] ?? 70,
+        message: "All previously restricted topics have been practiced. New topics unlocked.",
+      });
+    } else {
+      // Still missing some topics → keep restriction on the remaining ones
+      setRestrictToSameTopics(true);
+      setAllowedSubTopics(stillLocked);
+      setLastExamInfo({
+        topic: failingExam.topic,
+        difficulty: failingExam.difficulty,
+        percentage: failingExam.percentage,
+        passed: false,
+        threshold: DIFFICULTY_THRESHOLDS[(failingExam.difficulty || "medium").toLowerCase()] ?? 70,
+        message: `You must practice ALL remaining topics before unlocking new ones.`,
+      });
+    }
+  } catch (err) {
+    console.log("Leaderboard fetch failed:", err);
+    setRestrictToSameTopics(false);
+    setAllowedSubTopics([]);
+    setLastExamInfo(null);
+  }
+};
+
+  useEffect(() => {
+    fetchLeaderboard();
+  }, []);
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -192,11 +307,17 @@ export default function CreateTest() {
     setSelectedSubTopics([]);
   }, [category]);
 
-  // Subtopic helpers
+  // ---------- Subtopic helpers ----------
   const handleSubTopicChange = (item) => {
+    // When restricted, only allow topics that are in allowedSubTopics
+    if (restrictToSameTopics && !allowedSubTopics.includes(item)) {
+      setError(`You can only select previous topics: ${allowedSubTopics.join(", ")}`);
+      return;
+    }
     setSelectedSubTopics((prev) =>
       prev.includes(item) ? prev.filter((t) => t !== item) : [...prev, item]
     );
+    setError("");
   };
 
   const removeSubTopic = (item) => {
@@ -205,8 +326,12 @@ export default function CreateTest() {
 
   const handleSelectAllCurrent = () => {
     const current = convertedSyllabus[category][subject] || [];
+    const selectable = restrictToSameTopics
+      ? current.filter((t) => allowedSubTopics.includes(t))
+      : current;
+
     setSelectedSubTopics((prev) => {
-      const newOnes = current.filter((t) => !prev.includes(t));
+      const newOnes = selectable.filter((t) => !prev.includes(t));
       return [...prev, ...newOnes];
     });
   };
@@ -220,20 +345,28 @@ export default function CreateTest() {
       return;
     }
 
+    // Extra guard when restricted
+    if (restrictToSameTopics) {
+      const invalid = selectedSubTopics.filter((t) => !allowedSubTopics.includes(t));
+      if (invalid.length > 0) {
+        setError(
+          `Restricted mode: only these topics are allowed → ${allowedSubTopics.join(", ")}`
+        );
+        return;
+      }
+    }
+
     setSubjects((prev) => {
       const existingIndex = prev.findIndex((s) => s.category === category);
 
       if (existingIndex >= 0) {
-        // Category already exists → merge
         const existing = prev[existingIndex];
         const subjectNames = existing.subject.split(", ").filter(Boolean);
 
-        // Add new subject name if not already present
         if (!subjectNames.includes(subject)) {
           subjectNames.push(subject);
         }
 
-        // Merge subTopics (unique)
         const mergedSubTopics = Array.from(
           new Set([...existing.subTopics, ...selectedSubTopics])
         );
@@ -247,7 +380,6 @@ export default function CreateTest() {
         return updated;
       }
 
-      // New category → create new group
       return [
         ...prev,
         {
@@ -258,7 +390,6 @@ export default function CreateTest() {
       ];
     });
 
-    // Reset current selection
     setSelectedSubTopics([]);
     setError("");
   };
@@ -267,11 +398,46 @@ export default function CreateTest() {
     setSubjects((prev) => prev.filter((_, i) => i !== index));
   };
 
+  // Build topic string in the same format as leaderboard
+  const buildTopicString = (subjectsArr) => {
+    const allSubs = subjectsArr.flatMap((s) => s.subTopics || []);
+    // Keep order unique
+    return Array.from(new Set(allSubs)).join(", ");
+  };
+
+  // Check if current selection is allowed under restriction
+  const validateAgainstLastExam = (subjectsArr) => {
+    if (!restrictToSameTopics || allowedSubTopics.length === 0) {
+      return { ok: true };
+    }
+
+    const selected = subjectsArr.flatMap((s) => s.subTopics || []);
+    const invalid = selected.filter((t) => !allowedSubTopics.includes(t));
+
+    if (invalid.length > 0) {
+      return {
+        ok: false,
+        message: `Score was below threshold. You can only practice the same topics: ${allowedSubTopics.join(
+          ", "
+        )}`,
+      };
+    }
+    return { ok: true };
+  };
+
   // ===== SUBMIT =====
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
     setError("");
+
+    // Re-validate restriction on submit
+    const validation = validateAgainstLastExam(subjects);
+    if (!validation.ok) {
+      setError(validation.message);
+      setIsLoading(false);
+      return;
+    }
 
     if (creationMode === "manual") {
       try {
@@ -306,10 +472,11 @@ export default function CreateTest() {
         examType,
         difficulty,
         numQuestions,
-        subjects, // ← grouped by Technical / Non-Technical
+        subjects,
       };
 
       console.log("Final payload →", payload);
+      console.log("Topic string (for matching) →", buildTopicString(subjects));
 
       const response = await axios.post(
         "http://localhost:8080/api/generate-questions",
@@ -333,6 +500,13 @@ export default function CreateTest() {
     }
   };
 
+  // Filter visible subtopics in dropdown when restricted
+  const getVisibleSubTopics = () => {
+    const all = convertedSyllabus[category][subject] || [];
+    if (!restrictToSameTopics) return all;
+    return all.filter((t) => allowedSubTopics.includes(t));
+  };
+
   return (
     <div className="min-h-screen w-full bg-gray-100 py-6 px-4 sm:px-6 lg:px-8">
       <div className="w-full max-w-7xl mx-auto">
@@ -340,6 +514,40 @@ export default function CreateTest() {
           <h1 className="text-2xl sm:text-3xl font-bold text-center text-gray-800 mb-8">
             🛠️ Quiz Creator Studio
           </h1>
+
+          {/* Restriction banner */}
+         {lastExamInfo && (
+  <div
+    className={`mb-6 rounded-xl border px-4 py-3 text-sm ${
+      lastExamInfo.passed
+        ? "bg-green-50 border-green-200 text-green-800"
+        : "bg-amber-50 border-amber-200 text-amber-900"
+    }`}
+  >
+    {lastExamInfo.passed ? (
+      <>
+        ✅ {lastExamInfo.message || "Restriction cleared. You can choose any sub-topics."}
+      </>
+    ) : (
+      <>
+        ⚠️ Last exam score ({lastExamInfo.percentage}%) was below the{" "}
+        {lastExamInfo.difficulty} threshold ({lastExamInfo.threshold}%).
+        <br />
+        You must practice <strong>ALL</strong> of these remaining topics before new ones unlock:
+        <div className="mt-2 flex flex-wrap gap-1.5">
+          {allowedSubTopics.map((t) => (
+            <span
+              key={t}
+              className="text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200"
+            >
+              {t}
+            </span>
+          ))}
+        </div>
+      </>
+    )}
+  </div>
+)}
 
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Exam Type */}
@@ -380,7 +588,9 @@ export default function CreateTest() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                 {/* Category */}
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">Category</label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                    Category
+                  </label>
                   <select
                     value={category}
                     onChange={(e) => setCategory(e.target.value)}
@@ -393,7 +603,9 @@ export default function CreateTest() {
 
                 {/* Subject */}
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">Subject</label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                    Subject
+                  </label>
                   <select
                     value={subject}
                     onChange={(e) => {
@@ -403,7 +615,9 @@ export default function CreateTest() {
                     className="w-full h-11 px-3 rounded-xl border border-gray-300 bg-white text-sm"
                   >
                     {Object.keys(convertedSyllabus[category]).map((item) => (
-                      <option key={item} value={item}>{item}</option>
+                      <option key={item} value={item}>
+                        {item}
+                      </option>
                     ))}
                   </select>
                 </div>
@@ -422,34 +636,55 @@ export default function CreateTest() {
                         ? "Click to select..."
                         : `${selectedSubTopics.length} selected`}
                     </span>
-                    <span className="text-gray-400 text-xs">{showSubTopics ? "▲" : "▼"}</span>
+                    <span className="text-gray-400 text-xs">
+                      {showSubTopics ? "▲" : "▼"}
+                    </span>
                   </div>
 
                   {showSubTopics && (
                     <div className="absolute z-50 mt-2 w-full bg-white border border-gray-200 rounded-xl shadow-xl overflow-hidden">
                       <div className="flex items-center justify-between px-4 py-2.5 bg-gray-50 border-b">
-                        <span className="text-sm font-semibold">{selectedSubTopics.length} selected</span>
+                        <span className="text-sm font-semibold">
+                          {selectedSubTopics.length} selected
+                        </span>
                         <div className="flex gap-3">
-                          <button type="button" onClick={handleSelectAllCurrent} className="text-xs text-blue-600">
+                          <button
+                            type="button"
+                            onClick={handleSelectAllCurrent}
+                            className="text-xs text-blue-600"
+                          >
                             Select All
                           </button>
-                          <button type="button" onClick={handleClearCurrent} className="text-xs text-red-600">
+                          <button
+                            type="button"
+                            onClick={handleClearCurrent}
+                            className="text-xs text-red-600"
+                          >
                             Clear
                           </button>
                         </div>
                       </div>
                       <div className="max-h-64 overflow-y-auto py-1">
-                        {(convertedSyllabus[category][subject] || []).map((item) => (
-                          <label key={item} className="flex items-center px-4 py-2.5 hover:bg-gray-50 cursor-pointer text-sm">
-                            <input
-                              type="checkbox"
-                              checked={selectedSubTopics.includes(item)}
-                              onChange={() => handleSubTopicChange(item)}
-                              className="w-4 h-4 text-blue-600 rounded mr-3"
-                            />
-                            {item}
-                          </label>
-                        ))}
+                        {getVisibleSubTopics().length === 0 ? (
+                          <p className="px-4 py-3 text-sm text-gray-500">
+                            No allowed sub-topics in this subject under restriction.
+                          </p>
+                        ) : (
+                          getVisibleSubTopics().map((item) => (
+                            <label
+                              key={item}
+                              className="flex items-center px-4 py-2.5 hover:bg-gray-50 cursor-pointer text-sm"
+                            >
+                              <input
+                                type="checkbox"
+                                checked={selectedSubTopics.includes(item)}
+                                onChange={() => handleSubTopicChange(item)}
+                                className="w-4 h-4 text-blue-600 rounded mr-3"
+                              />
+                              {item}
+                            </label>
+                          ))
+                        )}
                       </div>
                     </div>
                   )}
@@ -460,9 +695,18 @@ export default function CreateTest() {
               {selectedSubTopics.length > 0 && (
                 <div className="mt-4 flex flex-wrap gap-2">
                   {selectedSubTopics.map((item) => (
-                    <span key={item} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm bg-sky-100 text-sky-800 border border-sky-200">
+                    <span
+                      key={item}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm bg-sky-100 text-sky-800 border border-sky-200"
+                    >
                       {item}
-                      <button type="button" onClick={() => removeSubTopic(item)} className="ml-1 font-bold">×</button>
+                      <button
+                        type="button"
+                        onClick={() => removeSubTopic(item)}
+                        className="ml-1 font-bold"
+                      >
+                        ×
+                      </button>
                     </span>
                   ))}
                 </div>
@@ -497,18 +741,22 @@ export default function CreateTest() {
 
                 <div className="space-y-4">
                   {subjects.map((s, index) => (
-                    <div key={index} className="bg-white rounded-xl border border-indigo-100 p-4">
+                    <div
+                      key={index}
+                      className="bg-white rounded-xl border border-indigo-100 p-4"
+                    >
                       <div className="flex justify-between items-start">
                         <div>
-                          <div className="font-semibold text-gray-800">
-                            {s.category}
-                          </div>
+                          <div className="font-semibold text-gray-800">{s.category}</div>
                           <div className="text-sm text-indigo-700 mt-1">
                             Subjects: <span className="font-medium">{s.subject}</span>
                           </div>
                           <div className="mt-2 flex flex-wrap gap-1.5">
                             {s.subTopics.map((t) => (
-                              <span key={t} className="text-xs px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700">
+                              <span
+                                key={t}
+                                className="text-xs px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700"
+                              >
                                 {t}
                               </span>
                             ))}
@@ -563,7 +811,9 @@ export default function CreateTest() {
                 type="button"
                 onClick={() => setCreationMode("manual")}
                 className={`py-3 rounded-xl font-semibold text-sm ${
-                  creationMode === "manual" ? "bg-green-600 text-white" : "bg-gray-200 text-gray-700"
+                  creationMode === "manual"
+                    ? "bg-green-600 text-white"
+                    : "bg-gray-200 text-gray-700"
                 }`}
               >
                 ✍️ Manual JSON Field
@@ -572,7 +822,9 @@ export default function CreateTest() {
                 type="button"
                 onClick={() => setCreationMode("ai")}
                 className={`py-3 rounded-xl font-semibold text-sm ${
-                  creationMode === "ai" ? "bg-purple-600 text-white" : "bg-gray-200 text-gray-700"
+                  creationMode === "ai"
+                    ? "bg-purple-600 text-white"
+                    : "bg-gray-200 text-gray-700"
                 }`}
               >
                 ✨ Smart AI Generation
@@ -624,7 +876,9 @@ export default function CreateTest() {
                   : "bg-green-600"
               } ${isLoading ? "opacity-70 cursor-not-allowed" : ""}`}
             >
-              {isLoading ? "Assembling Your Test Workspace..." : "🚀 Launch Configured Test"}
+              {isLoading
+                ? "Assembling Your Test Workspace..."
+                : "🚀 Launch Configured Test"}
             </button>
           </form>
         </div>
