@@ -199,33 +199,40 @@ export default function CreateTest() {
       return;
     }
 
-    // Sort oldest → newest so we can walk history
-    const sortedAsc = [...data].sort(
-      (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
+    // Sort newest first
+    const sortedDesc = [...data].sort(
+      (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
     );
 
-    // Find the most recent exam that failed the threshold
-    // (we walk from newest to oldest)
-    const sortedDesc = [...sortedAsc].reverse();
+    // Most recent exam date only (YYYY-MM-DD)
+    const latestDate = new Date(sortedDesc[0].createdAt)
+      .toISOString()
+      .slice(0, 10);
 
+    // ONLY exams from that one day (newest → oldest within the day)
+    const sameDayExams = sortedDesc.filter(
+      (exam) =>
+        new Date(exam.createdAt).toISOString().slice(0, 10) === latestDate
+    );
+
+    // Find the first (most recent) exam on that day that failed the threshold
     let failingExam = null;
-    let failingIndexInAsc = -1;
+    let failingIndex = -1;
 
-    for (let i = 0; i < sortedDesc.length; i++) {
-      const exam = sortedDesc[i];
+    for (let i = 0; i < sameDayExams.length; i++) {
+      const exam = sameDayExams[i];
       const pct = parseFloat(exam.percentage);
       const diff = (exam.difficulty || "medium").toLowerCase();
       const threshold = DIFFICULTY_THRESHOLDS[diff] ?? 70;
 
       if (!isNaN(pct) && pct < threshold) {
         failingExam = exam;
-        // find its position in the ascending list
-        failingIndexInAsc = sortedAsc.findIndex((e) => e._id === exam._id);
+        failingIndex = i;
         break;
       }
     }
 
-    // No failing exam found → fully unlocked
+    // No failing exam on the latest day → fully unlocked
     if (!failingExam) {
       setRestrictToSameTopics(false);
       setAllowedSubTopics([]);
@@ -238,10 +245,12 @@ export default function CreateTest() {
       .map((t) => t.trim())
       .filter(Boolean);
 
-    // Collect ALL topics practiced in exams AFTER the failing one
-    const laterExams = sortedAsc.slice(failingIndexInAsc + 1);
+    // Exams on the SAME day that came AFTER the failing one
+    // (sameDayExams is newest→oldest, so indices 0 .. failingIndex-1 are later)
+    const laterSameDay = sameDayExams.slice(0, failingIndex);
+
     const practicedAfter = new Set();
-    laterExams.forEach((exam) => {
+    laterSameDay.forEach((exam) => {
       (exam.topic || "")
         .split(",")
         .map((t) => t.trim())
@@ -249,23 +258,28 @@ export default function CreateTest() {
         .forEach((t) => practicedAfter.add(t));
     });
 
-    // Topics that still have NOT been practiced after the failing exam
+    // Topics still not practiced later on the same day
     const stillLocked = restrictedTopics.filter((t) => !practicedAfter.has(t));
 
+    const threshold =
+      DIFFICULTY_THRESHOLDS[(failingExam.difficulty || "medium").toLowerCase()] ??
+      70;
+
     if (stillLocked.length === 0) {
-      // User has practiced EVERY restricted topic → clear restriction
+      // All restricted topics were practiced later the same day → unlock
       setRestrictToSameTopics(false);
       setAllowedSubTopics([]);
       setLastExamInfo({
         topic: failingExam.topic,
         difficulty: failingExam.difficulty,
         percentage: failingExam.percentage,
-        passed: true, // treated as unlocked
-        threshold: DIFFICULTY_THRESHOLDS[(failingExam.difficulty || "medium").toLowerCase()] ?? 70,
-        message: "All previously restricted topics have been practiced. New topics unlocked.",
+        passed: true,
+        threshold,
+        message:
+          "All restricted topics practiced on the latest exam day. New topics unlocked.",
       });
     } else {
-      // Still missing some topics → keep restriction on the remaining ones
+      // Still missing some → keep restriction
       setRestrictToSameTopics(true);
       setAllowedSubTopics(stillLocked);
       setLastExamInfo({
@@ -273,8 +287,9 @@ export default function CreateTest() {
         difficulty: failingExam.difficulty,
         percentage: failingExam.percentage,
         passed: false,
-        threshold: DIFFICULTY_THRESHOLDS[(failingExam.difficulty || "medium").toLowerCase()] ?? 70,
-        message: `You must practice ALL remaining topics before unlocking new ones.`,
+        threshold,
+        message:
+          "You must practice ALL remaining topics (from the latest exam day) before new ones unlock.",
       });
     }
   } catch (err) {

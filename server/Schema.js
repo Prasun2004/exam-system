@@ -11,7 +11,6 @@ const resultSchema = new mongoose.Schema({
   },
   difficulty: {
     type: String,
-   
     enum: ["easy", "medium", "hard"],
   },
   percentage: {
@@ -21,6 +20,7 @@ const resultSchema = new mongoose.Schema({
   createdAt: {
     type: Date,
     default: Date.now,
+    required:true
   },
   details:{
     type:Array,
@@ -29,7 +29,14 @@ const resultSchema = new mongoose.Schema({
   sectionStats:{
     type:Object,
     require:true,
-  }
+  },
+  lastReminderSlot: {
+     type: Number,
+     default: -1 
+    }, // -1 = never sent
+    lastReminderSentAt: { 
+      type: Date 
+    },
 });
 
 const Result = mongoose.model("Result", resultSchema);
