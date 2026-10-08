@@ -1,463 +1,362 @@
-import React, { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import React, {
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 
-const syllabus = {
-  tech: [
-    {
-      topic: "Clinical Biochemistry",
-      subtopics: [
-        "Biomolecules", "Enzymes", "Carbohydrate Metabolism", "Protein Metabolism",
-        "Lipid Metabolism", "Water & Electrolyte Balance", "Acid-Base Balance",
-        "Vitamins & Minerals", "Clinical Enzymology", "Cardiac Markers",
-        "Liver Function Test (LFT)", "Renal Function Test (RFT)", "Endocrine Function Test",
-        "Quality Control & Quality Assurance", "Laboratory Instruments"
-      ]
-    },
-    {
-      topic: "Hematology",
-      subtopics: [
-        "Structure & Function of Blood", "RBC Indices & ESR", "WBC & Differential Count",
-        "Hemoglobinopathies", "Anemias", "Bleeding Disorders", "Coagulation & Anticoagulants",
-        "Platelets & Platelet Disorders", "Bone Marrow Examination", "Blood Grouping & Rh Typing",
-        "Cross Matching", "Transfusion Medicine", "Hematology Analyzers"
-      ]
-    },
-    {
-      topic: "Microbiology",
-      subtopics: [
-        "General Microbiology", "Bacteriology", "Culture Media", "Sterilization",
-        "Biochemical Tests", "Immunology", "Serology", "Parasitology", "Mycology",
-        "Mycobacteriology", "Virology", "Infection Control", "Biosafety",
-        "Antimicrobial Susceptibility Testing (AST)"
-      ]
-    },
-    {
-      topic: "Clinical Pathology",
-      subtopics: [
-        "Urine Examination", "Stool Examination", "Semen Analysis", "Body Fluids",
-        "Cerebrospinal Fluid (CSF)", "Synovial Fluid", "Pleural Fluid", "Ascitic Fluid",
-        "Gastric Fluid", "Sputum Examination", "Routine & Special Investigations"
-      ]
-    },
-    {
-      topic: "Cytopathology & Histopathology",
-      subtopics: [
-        "Cell Structure & Function", "Cytological Techniques", "Staining Methods",
-        "Fine Needle Aspiration Cytology (FNAC)", "Exfoliative Cytology",
-        "Histopathological Techniques", "Tissue Processing", "Embedding & Sectioning",
-        "Routine & Special Stains", "Immunohistochemistry"
-      ]
-    },
-    {
-      topic: "Immunohematology & Transfusion Medicine",
-      subtopics: [
-        "Blood Group Systems", "Antigen & Antibody", "Compatibility Testing",
-        "Cross Matching", "Aplastic Anemia", "Hemolytic Disease", "Blood Components",
-        "Blood Storage", "Transfusion Reactions"
-      ]
-    },
-    {
-      topic: "Molecular Biology & Biotechnology",
-      subtopics: [
-        "Structure of DNA & RNA", "DNA Replication", "Transcription", "Translation",
-        "PCR & Applications", "Restriction Enzymes", "Gel Electrophoresis",
-        "Blotting Techniques", "Recombinant DNA Technology", "ELISA",
-        "Genetic Engineering", "DNA Fingerprinting"
-      ]
-    },
-    {
-      topic: "Laboratory Management",
-      subtopics: [
-        "Laboratory Organization", "Safety Measures", "Quality Control & Quality Assurance",
-        "Laboratory Instruments & Maintenance", "Record Keeping",
-        "Sample Collection & Handling", "Biomedical Waste Management"
-      ]
-    },
-    {
-      topic: "Anatomy, Physiology & Health Education",
-      subtopics: [
-        "Human Anatomy", "Human Physiology", "Blood Circulation", "Respiratory System",
-        "Digestive System", "Endocrine System", "Reproductive System", "Nervous System",
-        "Health Education", "Community Health"
-      ]
-    },
-    {
-      topic: "Instrumentation & Techniques",
-      subtopics: [
-        "Microscope & Types", "Centrifuge & Uses", "Colorimeter", "Spectrophotometer",
-        "Hematology Analyzers", "Biochemistry Analyzers", "ELISA Reader", "PCR Machine",
-        "pH Meter", "Other Laboratory Equipment"
-      ]
-    }
-  ],
-  nonTech: [
-    {
-      topic: "General Knowledge & Aptitude",
-      subtopics: [
-        "General Science", "Current Affairs", "Indian Polity", "Indian Geography",
-        "Indian History", "General Awareness", "Logical Reasoning",
-        "Quantitative Aptitude", "English Language"
-      ]
-    },
-    {
-      topic: "Computer Application in Laboratory",
-      subtopics: [
-        "MS Office (Word, Excel, PowerPoint)", "Laboratory Software",
-        "Data Entry & Management", "Internet & Email", "Basic Computer Knowledge",
-        "Information Technology in Laboratory"
-      ]
-    },
-    {
-      topic: "MATH",
-      subtopics: [
-        "Percentage", "Ratio & Proportion", "Time & Work", "Time, Speed & Distance",
-        "Number System", "Profit & Loss", "Simple & Compound Interest", "Average",
-        "Simplification", "Data Interpretation"
-      ]
-    },
-    {
-      topic: "REASONING",
-      subtopics: [
-        "Analogy", "Classification", "Series", "Coding-Decoding", "Blood Relations",
-        "Direction Sense Test", "Ranking & Order", "Alphabet Test", "Number & Letter Series",
-        "Odd One Out", "Syllogism", "Statement & Conclusion", "Statement & Assumption",
-        "Statement & Argument", "Assertion & Reason", "Cause & Effect", "Venn Diagram",
-        "Puzzle", "Seating Arrangement", "Logical Reasoning", "Non-Verbal Reasoning"
-      ]
-    },
-    {
-      topic: "ENGLISH",
-      subtopics: [
-        "Preposition", "Articles", "Tenses", "Active & Passive Voice",
-        "Direct & Indirect Speech", "Modals", "Auxiliary Verbs", "Sentence Correction",
-        "Error Detection", "Synonyms", "Antonyms", "One Word Substitution",
-        "Idioms & Phrases", "Phrasal Verbs", "Spelling Correction", "Vocabulary",
-        "Word Formation", "Confusing Words"
-      ]
-    }
-  ]
-};
+import { useNavigate } from "react-router-dom";
+
+import api from "./componat/api.js";
+
+import { syllabus } from "./componat/syllabus";
+
+// ======================================================
+// CONVERT SYLLABUS
+// ======================================================
 
 const convertedSyllabus = {
   Technical: {},
-  "Non-Technical": {}
+  "Non-Technical": {},
 };
+
 syllabus.tech.forEach((item) => {
-  convertedSyllabus.Technical[item.topic] = item.subtopics;
-});
-syllabus.nonTech.forEach((item) => {
-  convertedSyllabus["Non-Technical"][item.topic] = item.subtopics;
+  convertedSyllabus.Technical[item.topic] =
+    item.subtopics;
 });
 
-// Thresholds: score must be >= this to unlock NEW topics
-const DIFFICULTY_THRESHOLDS = {
-  easy: 80,
-  medium: 70,
-  hard: 63,
-};
+syllabus.nonTech.forEach((item) => {
+  convertedSyllabus["Non-Technical"][item.topic] =
+    item.subtopics;
+});
+
+// ======================================================
+// CREATE TEST
+// ======================================================
 
 export default function CreateTest() {
   const navigate = useNavigate();
 
-  // Basic settings
+  // ====================================================
+  // BASIC SETTINGS
+  // ====================================================
+
   const [examType, setExamType] = useState("CRE");
+
   const [totalTime, setTotalTime] = useState(2400);
+
   const [numQuestions, setNumQuestions] = useState(20);
-  const [creationMode, setCreationMode] = useState("ai");
+
+  const [creationMode, setCreationMode] =
+    useState("ai");
+
   const [manualJson, setManualJson] = useState("");
-  const [difficulty, setDifficulty] = useState("medium");
+
+  const [difficulty, setDifficulty] =
+    useState("medium");
+
   const [isLoading, setIsLoading] = useState(false);
+
   const [error, setError] = useState("");
 
-  // Final grouped subjects that will be sent
+  // ====================================================
+  // CURRENT USER
+  // ====================================================
+
+  const [user, setUser] = useState(null);
+
+  // ====================================================
+  // SUBJECTS
+  // ====================================================
+
   const [subjects, setSubjects] = useState([]);
 
-  // Temporary selection
-  const [category, setCategory] = useState("Technical");
-  const [subject, setSubject] = useState(Object.keys(convertedSyllabus["Technical"])[0]);
-  const [selectedSubTopics, setSelectedSubTopics] = useState([]);
-  const [showSubTopics, setShowSubTopics] = useState(false);
+  const [category, setCategory] =
+    useState("Technical");
+
+  const [subject, setSubject] = useState(
+    Object.keys(
+      convertedSyllabus.Technical
+    )[0] || ""
+  );
+
+  const [selectedSubTopics, setSelectedSubTopics] =
+    useState([]);
+
+  const [showSubTopics, setShowSubTopics] =
+    useState(false);
+
   const dropdownRef = useRef(null);
 
-  // ===== Leaderboard restriction state =====
-  const [lastDayExams, setLastDayExams] = useState([]); // exams from the most recent date
-  const [restrictToSameTopics, setRestrictToSameTopics] = useState(false);
-  const [allowedSubTopics, setAllowedSubTopics] = useState([]); // when restricted
-  const [lastExamInfo, setLastExamInfo] = useState(null); // for UI message
-
-  // ---------- Fetch leaderboard & decide restriction ----------
-  const fetchLeaderboard = async () => {
-  try {
-    const res = await axios.get("http://localhost:8080/leaderboard");
-    const data = Array.isArray(res.data) ? res.data : res.data?.data || [];
-
-    if (!data.length) {
-      setRestrictToSameTopics(false);
-      setAllowedSubTopics([]);
-      setLastExamInfo(null);
-      return;
-    }
-
-    // Sort newest first
-    const sortedDesc = [...data].sort(
-      (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
-    );
-
-    // Most recent exam date only (YYYY-MM-DD)
-    const latestDate = new Date(sortedDesc[0].createdAt)
-      .toISOString()
-      .slice(0, 10);
-
-    // ONLY exams from that one day (newest → oldest within the day)
-    const sameDayExams = sortedDesc.filter(
-      (exam) =>
-        new Date(exam.createdAt).toISOString().slice(0, 10) === latestDate
-    );
-
-    // Find the first (most recent) exam on that day that failed the threshold
-    let failingExam = null;
-    let failingIndex = -1;
-
-    for (let i = 0; i < sameDayExams.length; i++) {
-      const exam = sameDayExams[i];
-      const pct = parseFloat(exam.percentage);
-      const diff = (exam.difficulty || "medium").toLowerCase();
-      const threshold = DIFFICULTY_THRESHOLDS[diff] ?? 70;
-
-      if (!isNaN(pct) && pct < threshold) {
-        failingExam = exam;
-        failingIndex = i;
-        break;
-      }
-    }
-
-    // No failing exam on the latest day → fully unlocked
-    if (!failingExam) {
-      setRestrictToSameTopics(false);
-      setAllowedSubTopics([]);
-      setLastExamInfo(null);
-      return;
-    }
-
-    const restrictedTopics = (failingExam.topic || "")
-      .split(",")
-      .map((t) => t.trim())
-      .filter(Boolean);
-
-    // Exams on the SAME day that came AFTER the failing one
-    // (sameDayExams is newest→oldest, so indices 0 .. failingIndex-1 are later)
-    const laterSameDay = sameDayExams.slice(0, failingIndex);
-
-    const practicedAfter = new Set();
-    laterSameDay.forEach((exam) => {
-      (exam.topic || "")
-        .split(",")
-        .map((t) => t.trim())
-        .filter(Boolean)
-        .forEach((t) => practicedAfter.add(t));
-    });
-
-    // Topics still not practiced later on the same day
-    const stillLocked = restrictedTopics.filter((t) => !practicedAfter.has(t));
-
-    const threshold =
-      DIFFICULTY_THRESHOLDS[(failingExam.difficulty || "medium").toLowerCase()] ??
-      70;
-
-    if (stillLocked.length === 0) {
-      // All restricted topics were practiced later the same day → unlock
-      setRestrictToSameTopics(false);
-      setAllowedSubTopics([]);
-      setLastExamInfo({
-        topic: failingExam.topic,
-        difficulty: failingExam.difficulty,
-        percentage: failingExam.percentage,
-        passed: true,
-        threshold,
-        message:
-          "All restricted topics practiced on the latest exam day. New topics unlocked.",
-      });
-    } else {
-      // Still missing some → keep restriction
-      setRestrictToSameTopics(true);
-      setAllowedSubTopics(stillLocked);
-      setLastExamInfo({
-        topic: failingExam.topic,
-        difficulty: failingExam.difficulty,
-        percentage: failingExam.percentage,
-        passed: false,
-        threshold,
-        message:
-          "You must practice ALL remaining topics (from the latest exam day) before new ones unlock.",
-      });
-    }
-  } catch (err) {
-    console.log("Leaderboard fetch failed:", err);
-    setRestrictToSameTopics(false);
-    setAllowedSubTopics([]);
-    setLastExamInfo(null);
-  }
-};
+  // ====================================================
+  // AUTH USER
+  // ====================================================
 
   useEffect(() => {
-    fetchLeaderboard();
-  }, []);
+    const loadUser = async () => {
+      try {
+        const response =
+          await api.get("/auth/me");
 
-  // Close dropdown on outside click
+        if (
+          response.data?.success &&
+          response.data?.user
+        ) {
+          setUser(response.data.user);
+        }
+      } catch (error) {
+        console.error(
+          "Failed to load current user:",
+          error
+        );
+
+        if (
+          error.response?.status === 401
+        ) {
+          navigate("/", {
+            replace: true,
+          });
+        }
+      }
+    };
+
+    loadUser();
+  }, [navigate]);
+
+  // ====================================================
+  // CLOSE DROPDOWN OUTSIDE CLICK
+  // ====================================================
+
   useEffect(() => {
     const handleClickOutside = (e) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(e.target)
+      ) {
         setShowSubTopics(false);
       }
     };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+
+    document.addEventListener(
+      "mousedown",
+      handleClickOutside
+    );
+
+    return () => {
+      document.removeEventListener(
+        "mousedown",
+        handleClickOutside
+      );
+    };
   }, []);
 
-  // Reset subject when category changes
+  // ====================================================
+  // CATEGORY CHANGE
+  // ====================================================
+
   useEffect(() => {
-    const first = Object.keys(convertedSyllabus[category])[0];
-    setSubject(first);
+    const categorySubjects =
+      convertedSyllabus[category] || {};
+
+    const first =
+      Object.keys(categorySubjects)[0];
+
+    setSubject(first || "");
+
     setSelectedSubTopics([]);
   }, [category]);
 
-  // ---------- Subtopic helpers ----------
+  // ====================================================
+  // SUBTOPIC SELECT
+  // ====================================================
+
   const handleSubTopicChange = (item) => {
-    // When restricted, only allow topics that are in allowedSubTopics
-    if (restrictToSameTopics && !allowedSubTopics.includes(item)) {
-      setError(`You can only select previous topics: ${allowedSubTopics.join(", ")}`);
-      return;
-    }
     setSelectedSubTopics((prev) =>
-      prev.includes(item) ? prev.filter((t) => t !== item) : [...prev, item]
+      prev.includes(item)
+        ? prev.filter((t) => t !== item)
+        : [...prev, item]
     );
+
     setError("");
   };
 
+  // ====================================================
+  // REMOVE SUBTOPIC
+  // ====================================================
+
   const removeSubTopic = (item) => {
-    setSelectedSubTopics((prev) => prev.filter((t) => t !== item));
+    setSelectedSubTopics((prev) =>
+      prev.filter((t) => t !== item)
+    );
   };
+
+  // ====================================================
+  // SELECT ALL
+  // ====================================================
 
   const handleSelectAllCurrent = () => {
-    const current = convertedSyllabus[category][subject] || [];
-    const selectable = restrictToSameTopics
-      ? current.filter((t) => allowedSubTopics.includes(t))
-      : current;
+    const current =
+      convertedSyllabus[category]?.[subject] || [];
 
     setSelectedSubTopics((prev) => {
-      const newOnes = selectable.filter((t) => !prev.includes(t));
+      const newOnes = current.filter(
+        (t) => !prev.includes(t)
+      );
+
       return [...prev, ...newOnes];
     });
+
+    setError("");
   };
 
-  const handleClearCurrent = () => setSelectedSubTopics([]);
+  // ====================================================
+  // CLEAR
+  // ====================================================
 
-  // ===== ADD SUBJECT (group by category) =====
+  const handleClearCurrent = () => {
+    setSelectedSubTopics([]);
+
+    setError("");
+  };
+
+  // ====================================================
+  // ADD SUBJECT
+  // ====================================================
+
   const addSubject = () => {
     if (selectedSubTopics.length === 0) {
-      setError("Please select at least one sub-topic.");
+      setError(
+        "Please select at least one sub-topic."
+      );
+
       return;
     }
 
-    // Extra guard when restricted
-    if (restrictToSameTopics) {
-      const invalid = selectedSubTopics.filter((t) => !allowedSubTopics.includes(t));
-      if (invalid.length > 0) {
-        setError(
-          `Restricted mode: only these topics are allowed → ${allowedSubTopics.join(", ")}`
-        );
-        return;
-      }
-    }
-
     setSubjects((prev) => {
-      const existingIndex = prev.findIndex((s) => s.category === category);
+      const existingIndex =
+        prev.findIndex(
+          (s) => s.category === category
+        );
 
+      // Existing category
       if (existingIndex >= 0) {
-        const existing = prev[existingIndex];
-        const subjectNames = existing.subject.split(", ").filter(Boolean);
+        const existing =
+          prev[existingIndex];
 
-        if (!subjectNames.includes(subject)) {
+        const subjectNames =
+          existing.subject
+            .split(", ")
+            .filter(Boolean);
+
+        if (
+          !subjectNames.includes(subject)
+        ) {
           subjectNames.push(subject);
         }
 
-        const mergedSubTopics = Array.from(
-          new Set([...existing.subTopics, ...selectedSubTopics])
-        );
+        const mergedSubTopics =
+          Array.from(
+            new Set([
+              ...existing.subTopics,
+              ...selectedSubTopics,
+            ])
+          );
 
         const updated = [...prev];
+
         updated[existingIndex] = {
           category,
-          subject: subjectNames.join(", "),
+          subject:
+            subjectNames.join(", "),
           subTopics: mergedSubTopics,
         };
+
         return updated;
       }
 
+      // New category
       return [
         ...prev,
         {
           category,
-          subject: subject,
-          subTopics: [...selectedSubTopics],
+          subject,
+          subTopics: [
+            ...selectedSubTopics,
+          ],
         },
       ];
     });
 
     setSelectedSubTopics([]);
+
+    setShowSubTopics(false);
+
     setError("");
   };
+
+  // ====================================================
+  // REMOVE SUBJECT GROUP
+  // ====================================================
 
   const removeSubjectGroup = (index) => {
-    setSubjects((prev) => prev.filter((_, i) => i !== index));
+    setSubjects((prev) =>
+      prev.filter((_, i) => i !== index)
+    );
   };
 
-  // Build topic string in the same format as leaderboard
+  // ====================================================
+  // BUILD TOPIC STRING
+  // ====================================================
+
   const buildTopicString = (subjectsArr) => {
-    const allSubs = subjectsArr.flatMap((s) => s.subTopics || []);
-    // Keep order unique
-    return Array.from(new Set(allSubs)).join(", ");
+    const allSubs =
+      subjectsArr.flatMap(
+        (s) => s.subTopics || []
+      );
+
+    return Array.from(
+      new Set(allSubs)
+    ).join(", ");
   };
 
-  // Check if current selection is allowed under restriction
-  const validateAgainstLastExam = (subjectsArr) => {
-    if (!restrictToSameTopics || allowedSubTopics.length === 0) {
-      return { ok: true };
-    }
+  // ====================================================
+  // SUBMIT / CREATE TEST
+  // ====================================================
 
-    const selected = subjectsArr.flatMap((s) => s.subTopics || []);
-    const invalid = selected.filter((t) => !allowedSubTopics.includes(t));
-
-    if (invalid.length > 0) {
-      return {
-        ok: false,
-        message: `Score was below threshold. You can only practice the same topics: ${allowedSubTopics.join(
-          ", "
-        )}`,
-      };
-    }
-    return { ok: true };
-  };
-
-  // ===== SUBMIT =====
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     setIsLoading(true);
+
     setError("");
 
-    // Re-validate restriction on submit
-    const validation = validateAgainstLastExam(subjects);
-    if (!validation.ok) {
-      setError(validation.message);
-      setIsLoading(false);
-      return;
-    }
+    // ==================================================
+    // MANUAL MODE
+    // ==================================================
 
     if (creationMode === "manual") {
       try {
-        const parsedQuestions = JSON.parse(manualJson);
-        if (!Array.isArray(parsedQuestions)) throw new Error("Must be an array");
+        if (!manualJson.trim()) {
+          throw new Error(
+            "Manual JSON is empty"
+          );
+        }
+
+        const parsedQuestions =
+          JSON.parse(manualJson);
+
+        if (!Array.isArray(parsedQuestions)) {
+          throw new Error(
+            "Manual JSON must be an array"
+          );
+        }
+
+        if (
+          parsedQuestions.length === 0
+        ) {
+          throw new Error(
+            "At least one question is required"
+          );
+        }
 
         navigate("/exam", {
           state: {
@@ -465,240 +364,628 @@ export default function CreateTest() {
             difficulty,
             examType,
             subjects,
-            customQuestions: parsedQuestions,
+            customQuestions:
+              parsedQuestions,
           },
         });
-      } catch (err) {
-        setError("Invalid JSON format. Please ensure it is an array of question objects.");
+      } catch (error) {
+        console.error(
+          "Manual JSON error:",
+          error
+        );
+
+        setError(
+          "Invalid JSON format. Please ensure it is an array of question objects."
+        );
+
         setIsLoading(false);
       }
+
       return;
     }
 
-    // AI Mode
+    // ==================================================
+    // AI MODE
+    // ==================================================
+
     if (subjects.length === 0) {
-      setError("Please add at least one subject group.");
+      setError(
+        "Please add at least one subject group."
+      );
+
       setIsLoading(false);
+
+      return;
+    }
+
+    // ==================================================
+    // VALIDATE AI VALUES
+    // ==================================================
+
+    if (
+      !numQuestions ||
+      numQuestions < 5 ||
+      numQuestions > 100
+    ) {
+      setError(
+        "Number of questions must be between 5 and 100."
+      );
+
+      setIsLoading(false);
+
+      return;
+    }
+
+    if (
+      !totalTime ||
+      totalTime < 60
+    ) {
+      setError(
+        "Total time must be at least 60 seconds."
+      );
+
+      setIsLoading(false);
+
       return;
     }
 
     try {
+      // =================================================
+      // AI GENERATION PAYLOAD
+      // =================================================
+
       const payload = {
-        examType,
-        difficulty,
-        numQuestions,
-        subjects,
+        subjects: subjects,
+        numQuestions: Number(numQuestions),
+        difficulty: difficulty,
+        examType: examType,
+        totalTime: Number(totalTime),
       };
 
-      console.log("Final payload →", payload);
-      console.log("Topic string (for matching) →", buildTopicString(subjects));
-
-      const response = await axios.post(
-        "http://localhost:8080/api/generate-questions",
+      console.log(
+        "AI Generation Payload:",
         payload
       );
 
-      navigate("/exam", {
-        state: {
-          totalTime,
-          difficulty,
-          examType,
-          subjects,
-          customQuestions: response.data.questions,
-        },
-      });
-    } catch (err) {
-      console.error(err);
-      setError("AI Generation failed. Check backend connection.");
+      console.log(
+        "Topic string:",
+        buildTopicString(subjects)
+      );
+
+      // =================================================
+      // JWT IS AUTOMATICALLY ADDED BY api.js
+      // =================================================
+
+      const response =
+        await api.post(
+          "/ai/generate-questions",
+          payload
+        );
+
+      // =================================================
+      // CHECK RESPONSE
+      // =================================================
+
+      if (
+        !response.data?.questions ||
+        !Array.isArray(
+          response.data.questions
+        )
+      ) {
+        throw new Error(
+          "Invalid questions response"
+        );
+      }
+
+      // =================================================
+      // GO TO EXAM PAGE
+      // =================================================
+
+      navigate("/question");
+    } catch (error) {
+      console.error(
+        "AI Generation Error:",
+        error
+      );
+
+      // ================================================
+      // NOT LOGGED IN / TOKEN INVALID
+      // ================================================
+
+      if (
+        error.response?.status === 401
+      ) {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+
+        navigate("/", {
+          replace: true,
+        });
+
+        return;
+      }
+
+      // ================================================
+      // NOT TEACHER
+      // ================================================
+
+      if (
+        error.response?.status === 403
+      ) {
+        setError(
+          "You do not have permission to generate tests. Please login with a teacher account."
+        );
+
+        return;
+      }
+
+      // ================================================
+      // OTHER ERROR
+      // ================================================
+
+      const message =
+        error.response?.data?.error ||
+        error.response?.data?.message ||
+        error.message ||
+        "AI Generation failed. Check backend connection.";
+
+      setError(message);
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Filter visible subtopics in dropdown when restricted
+  // ====================================================
+  // VISIBLE SUBTOPICS
+  // ====================================================
+
   const getVisibleSubTopics = () => {
-    const all = convertedSyllabus[category][subject] || [];
-    if (!restrictToSameTopics) return all;
-    return all.filter((t) => allowedSubTopics.includes(t));
+    return (
+      convertedSyllabus[category]?.[subject] || []
+    );
   };
+
+  // ====================================================
+  // UI
+  // ====================================================
 
   return (
     <div className="min-h-screen w-full bg-gray-100 py-6 px-4 sm:px-6 lg:px-8">
       <div className="w-full max-w-7xl mx-auto">
         <div className="bg-white rounded-2xl shadow-lg p-6 sm:p-8">
-          <h1 className="text-2xl sm:text-3xl font-bold text-center text-gray-800 mb-8">
-            🛠️ Quiz Creator Studio
-          </h1>
 
-          {/* Restriction banner */}
-         {lastExamInfo && (
-  <div
-    className={`mb-6 rounded-xl border px-4 py-3 text-sm ${
-      lastExamInfo.passed
-        ? "bg-green-50 border-green-200 text-green-800"
-        : "bg-amber-50 border-amber-200 text-amber-900"
-    }`}
-  >
-    {lastExamInfo.passed ? (
-      <>
-        ✅ {lastExamInfo.message || "Restriction cleared. You can choose any sub-topics."}
-      </>
-    ) : (
-      <>
-        ⚠️ Last exam score ({lastExamInfo.percentage}%) was below the{" "}
-        {lastExamInfo.difficulty} threshold ({lastExamInfo.threshold}%).
-        <br />
-        You must practice <strong>ALL</strong> of these remaining topics before new ones unlock:
-        <div className="mt-2 flex flex-wrap gap-1.5">
-          {allowedSubTopics.map((t) => (
-            <span
-              key={t}
-              className="text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200"
-            >
-              {t}
-            </span>
-          ))}
-        </div>
-      </>
-    )}
-  </div>
-)}
+          {/* ==========================================
+              HEADER
+          ========================================== */}
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Exam Type */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-3">Exam</label>
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">
+                🛠️ Quiz Creator Studio
+              </h1>
+
+              {user && (
+                <p className="text-sm text-gray-500 mt-2">
+                  Logged in as{" "}
+                  <span className="font-semibold text-gray-700">
+                    {user.email}
+                  </span>
+
+                  {" · "}
+
+                  <span className="capitalize text-blue-600 font-semibold">
+                    {user.role}
+                  </span>
+                </p>
+              )}
+            </div>
+            
+            <button
+              type="button"
+              onClick={() =>
+                navigate("/question")
+              }
+              className="
+                px-5
+                py-2.5
+                rounded-xl
+                font-semibold
+                text-white
+                bg-gradient-to-r
+                from-indigo-600
+                to-purple-600
+                hover:opacity-90
+              "
+            >
+              Question Page
+            </button>
+
+            <button
+              type="button"
+              onClick={() =>
+                navigate("/leaderboard")
+              }
+              className="
+                px-5
+                py-2.5
+                rounded-xl
+                font-semibold
+                text-white
+                bg-gradient-to-r
+                from-indigo-600
+                to-purple-600
+                hover:opacity-90
+              "
+            >
+              LeaderBoard
+            </button>
+          </div>
+
+          {/* ==========================================
+              MAIN FORM
+          ========================================== */}
+
+          <form
+            onSubmit={handleSubmit}
+            className="space-y-6"
+          >
+
+            {/* ========================================
+                EXAM TYPE
+            ======================================== */}
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-3">
+                Exam
+              </label>
+
               <div className="flex items-center gap-8">
+
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="radio"
                     name="examType"
                     value="CRE"
-                    checked={examType === "CRE"}
-                    onChange={() => setExamType("CRE")}
+                    checked={
+                      examType === "CRE"
+                    }
+                    onChange={() =>
+                      setExamType("CRE")
+                    }
                     className="w-4 h-4 text-blue-600"
                   />
-                  <span className="text-sm font-medium">CRE</span>
+
+                  <span className="text-sm font-medium">
+                    CRE
+                  </span>
                 </label>
+
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="radio"
                     name="examType"
                     value="RRB"
-                    checked={examType === "RRB"}
-                    onChange={() => setExamType("RRB")}
+                    checked={
+                      examType === "RRB"
+                    }
+                    onChange={() =>
+                      setExamType("RRB")
+                    }
                     className="w-4 h-4 text-blue-600"
                   />
-                  <span className="text-sm font-medium">RRB</span>
+
+                  <span className="text-sm font-medium">
+                    RRB
+                  </span>
                 </label>
+
               </div>
             </div>
 
-            {/* Add Subject Section */}
-            <div className="border border-gray-200 rounded-2xl p-5 bg-gray-50">
-              <h2 className="text-lg font-semibold text-gray-800 mb-4">
-                Add Subjects (will be grouped by Technical / Non-Technical)
+            {/* ========================================
+                ADD SUBJECT
+            ======================================== */}
+
+            <div
+              className="
+                border
+                border-gray-200
+                rounded-2xl
+                p-5
+                bg-gray-50
+              "
+            >
+              <h2
+                className="
+                  text-lg
+                  font-semibold
+                  text-gray-800
+                  mb-4
+                "
+              >
+                Add Subjects
               </h2>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                {/* Category */}
+              <div
+                className="
+                  grid
+                  grid-cols-1
+                  md:grid-cols-3
+                  gap-5
+                "
+              >
+
+                {/* CATEGORY */}
+
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                  <label
+                    className="
+                      block
+                      text-sm
+                      font-semibold
+                      text-gray-700
+                      mb-1.5
+                    "
+                  >
                     Category
                   </label>
+
                   <select
                     value={category}
-                    onChange={(e) => setCategory(e.target.value)}
-                    className="w-full h-11 px-3 rounded-xl border border-gray-300 bg-white text-sm"
+                    onChange={(e) => {
+                      setCategory(
+                        e.target.value
+                      );
+                    }}
+                    className="
+                      w-full
+                      h-11
+                      px-3
+                      rounded-xl
+                      border
+                      border-gray-300
+                      bg-white
+                      text-sm
+                    "
                   >
-                    <option value="Technical">🖥️ Technical</option>
-                    <option value="Non-Technical">📘 Non-Technical</option>
+                    <option value="Technical">
+                      🖥️ Technical
+                    </option>
+
+                    <option value="Non-Technical">
+                      📘 Non-Technical
+                    </option>
                   </select>
                 </div>
 
-                {/* Subject */}
+                {/* SUBJECT */}
+
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                  <label
+                    className="
+                      block
+                      text-sm
+                      font-semibold
+                      text-gray-700
+                      mb-1.5
+                    "
+                  >
                     Subject
                   </label>
+
                   <select
                     value={subject}
                     onChange={(e) => {
-                      setSubject(e.target.value);
-                      setSelectedSubTopics([]);
+                      setSubject(
+                        e.target.value
+                      );
+
+                      setSelectedSubTopics(
+                        []
+                      );
                     }}
-                    className="w-full h-11 px-3 rounded-xl border border-gray-300 bg-white text-sm"
+                    className="
+                      w-full
+                      h-11
+                      px-3
+                      rounded-xl
+                      border
+                      border-gray-300
+                      bg-white
+                      text-sm
+                    "
                   >
-                    {Object.keys(convertedSyllabus[category]).map((item) => (
-                      <option key={item} value={item}>
+                    {Object.keys(
+                      convertedSyllabus[
+                        category
+                      ] || {}
+                    ).map((item) => (
+                      <option
+                        key={item}
+                        value={item}
+                      >
                         {item}
                       </option>
                     ))}
                   </select>
                 </div>
 
-                {/* Sub Topics */}
-                <div className="relative" ref={dropdownRef}>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                {/* SUBTOPICS */}
+
+                <div
+                  className="relative"
+                  ref={dropdownRef}
+                >
+                  <label
+                    className="
+                      block
+                      text-sm
+                      font-semibold
+                      text-gray-700
+                      mb-1.5
+                    "
+                  >
                     Select Sub Topics
                   </label>
+
                   <div
-                    onClick={() => setShowSubTopics(!showSubTopics)}
-                    className="w-full min-h-[44px] px-3 py-2 rounded-xl border border-gray-300 bg-white cursor-pointer flex items-center justify-between"
+                    onClick={() =>
+                      setShowSubTopics(
+                        (prev) => !prev
+                      )
+                    }
+                    className="
+                      w-full
+                      min-h-[44px]
+                      px-3
+                      py-2
+                      rounded-xl
+                      border
+                      border-gray-300
+                      bg-white
+                      cursor-pointer
+                      flex
+                      items-center
+                      justify-between
+                    "
                   >
                     <span className="text-sm text-gray-500">
-                      {selectedSubTopics.length === 0
+                      {selectedSubTopics.length ===
+                      0
                         ? "Click to select..."
                         : `${selectedSubTopics.length} selected`}
                     </span>
+
                     <span className="text-gray-400 text-xs">
-                      {showSubTopics ? "▲" : "▼"}
+                      {showSubTopics
+                        ? "▲"
+                        : "▼"}
                     </span>
                   </div>
 
                   {showSubTopics && (
-                    <div className="absolute z-50 mt-2 w-full bg-white border border-gray-200 rounded-xl shadow-xl overflow-hidden">
-                      <div className="flex items-center justify-between px-4 py-2.5 bg-gray-50 border-b">
+                    <div
+                      className="
+                        absolute
+                        z-50
+                        mt-2
+                        w-full
+                        bg-white
+                        border
+                        border-gray-200
+                        rounded-xl
+                        shadow-xl
+                        overflow-hidden
+                      "
+                    >
+                      <div
+                        className="
+                          flex
+                          items-center
+                          justify-between
+                          px-4
+                          py-2.5
+                          bg-gray-50
+                          border-b
+                        "
+                      >
                         <span className="text-sm font-semibold">
-                          {selectedSubTopics.length} selected
+                          {selectedSubTopics.length}{" "}
+                          selected
                         </span>
+
                         <div className="flex gap-3">
+
                           <button
                             type="button"
-                            onClick={handleSelectAllCurrent}
-                            className="text-xs text-blue-600"
+                            onClick={
+                              handleSelectAllCurrent
+                            }
+                            className="
+                              text-xs
+                              text-blue-600
+                              hover:underline
+                            "
                           >
                             Select All
                           </button>
+
                           <button
                             type="button"
-                            onClick={handleClearCurrent}
-                            className="text-xs text-red-600"
+                            onClick={
+                              handleClearCurrent
+                            }
+                            className="
+                              text-xs
+                              text-red-600
+                              hover:underline
+                            "
                           >
                             Clear
                           </button>
+
                         </div>
                       </div>
-                      <div className="max-h-64 overflow-y-auto py-1">
-                        {getVisibleSubTopics().length === 0 ? (
-                          <p className="px-4 py-3 text-sm text-gray-500">
-                            No allowed sub-topics in this subject under restriction.
+
+                      <div
+                        className="
+                          max-h-64
+                          overflow-y-auto
+                          py-1
+                        "
+                      >
+                        {getVisibleSubTopics()
+                          .length === 0 ? (
+                          <p
+                            className="
+                              px-4
+                              py-3
+                              text-sm
+                              text-gray-500
+                            "
+                          >
+                            No sub-topics in
+                            this subject.
                           </p>
                         ) : (
-                          getVisibleSubTopics().map((item) => (
-                            <label
-                              key={item}
-                              className="flex items-center px-4 py-2.5 hover:bg-gray-50 cursor-pointer text-sm"
-                            >
-                              <input
-                                type="checkbox"
-                                checked={selectedSubTopics.includes(item)}
-                                onChange={() => handleSubTopicChange(item)}
-                                className="w-4 h-4 text-blue-600 rounded mr-3"
-                              />
-                              {item}
-                            </label>
-                          ))
+                          getVisibleSubTopics().map(
+                            (item) => (
+                              <label
+                                key={item}
+                                className="
+                                  flex
+                                  items-center
+                                  px-4
+                                  py-2.5
+                                  hover:bg-gray-50
+                                  cursor-pointer
+                                  text-sm
+                                "
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={selectedSubTopics.includes(
+                                    item
+                                  )}
+                                  onChange={() =>
+                                    handleSubTopicChange(
+                                      item
+                                    )
+                                  }
+                                  className="
+                                    w-4
+                                    h-4
+                                    text-blue-600
+                                    rounded
+                                    mr-3
+                                  "
+                                />
+
+                                {item}
+                              </label>
+                            )
+                          )
                         )}
                       </div>
                     </div>
@@ -706,204 +993,622 @@ export default function CreateTest() {
                 </div>
               </div>
 
-              {/* Current chips */}
-              {selectedSubTopics.length > 0 && (
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {selectedSubTopics.map((item) => (
-                    <span
-                      key={item}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm bg-sky-100 text-sky-800 border border-sky-200"
-                    >
-                      {item}
-                      <button
-                        type="button"
-                        onClick={() => removeSubTopic(item)}
-                        className="ml-1 font-bold"
+              {/* SELECTED CHIPS */}
+
+              {selectedSubTopics.length >
+                0 && (
+                <div
+                  className="
+                    mt-4
+                    flex
+                    flex-wrap
+                    gap-2
+                  "
+                >
+                  {selectedSubTopics.map(
+                    (item) => (
+                      <span
+                        key={item}
+                        className="
+                          inline-flex
+                          items-center
+                          gap-1.5
+                          px-3
+                          py-1.5
+                          rounded-full
+                          text-sm
+                          bg-sky-100
+                          text-sky-800
+                          border
+                          border-sky-200
+                        "
                       >
-                        ×
-                      </button>
-                    </span>
-                  ))}
+                        {item}
+
+                        <button
+                          type="button"
+                          onClick={() =>
+                            removeSubTopic(
+                              item
+                            )
+                          }
+                          className="
+                            ml-1
+                            font-bold
+                            hover:text-red-600
+                          "
+                        >
+                          ×
+                        </button>
+                      </span>
+                    )
+                  )}
                 </div>
               )}
+
+              {/* ADD */}
 
               <div className="mt-5">
                 <button
                   type="button"
                   onClick={addSubject}
-                  className="px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm"
+                  className="
+                    px-6
+                    py-2.5
+                    rounded-xl
+                    bg-blue-600
+                    hover:bg-blue-700
+                    text-white
+                    font-semibold
+                    text-sm
+                  "
                 >
                   ➕ Add / Merge into Category
                 </button>
               </div>
             </div>
 
-            {/* Final Grouped Subjects Preview */}
+            {/* ========================================
+                FINAL SUBJECT GROUPS
+            ======================================== */}
+
             {subjects.length > 0 && (
-              <div className="bg-indigo-50 border border-indigo-200 rounded-2xl p-5">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-base font-semibold text-indigo-900">
+              <div
+                className="
+                  bg-indigo-50
+                  border
+                  border-indigo-200
+                  rounded-2xl
+                  p-5
+                "
+              >
+                <div
+                  className="
+                    flex
+                    items-center
+                    justify-between
+                    mb-4
+                  "
+                >
+                  <h3
+                    className="
+                      text-base
+                      font-semibold
+                      text-indigo-900
+                    "
+                  >
                     Final Groups ({subjects.length})
                   </h3>
+
                   <button
                     type="button"
-                    onClick={() => setSubjects([])}
-                    className="text-xs font-medium text-red-600"
+                    onClick={() =>
+                      setSubjects([])
+                    }
+                    className="
+                      text-xs
+                      font-medium
+                      text-red-600
+                      hover:underline
+                    "
                   >
                     Clear All
                   </button>
                 </div>
 
                 <div className="space-y-4">
-                  {subjects.map((s, index) => (
-                    <div
-                      key={index}
-                      className="bg-white rounded-xl border border-indigo-100 p-4"
-                    >
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <div className="font-semibold text-gray-800">{s.category}</div>
-                          <div className="text-sm text-indigo-700 mt-1">
-                            Subjects: <span className="font-medium">{s.subject}</span>
-                          </div>
-                          <div className="mt-2 flex flex-wrap gap-1.5">
-                            {s.subTopics.map((t) => (
-                              <span
-                                key={t}
-                                className="text-xs px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700"
-                              >
-                                {t}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => removeSubjectGroup(index)}
-                          className="text-red-500 hover:text-red-700 font-bold text-lg"
+                  {subjects.map(
+                    (group, index) => (
+                      <div
+                        key={`${group.category}-${index}`}
+                        className="
+                          bg-white
+                          rounded-xl
+                          border
+                          border-indigo-100
+                          p-4
+                        "
+                      >
+                        <div
+                          className="
+                            flex
+                            justify-between
+                            items-start
+                            gap-4
+                          "
                         >
-                          ×
-                        </button>
+                          <div>
+                            <div
+                              className="
+                                font-semibold
+                                text-gray-800
+                              "
+                            >
+                              {group.category}
+                            </div>
+
+                            <div
+                              className="
+                                text-sm
+                                text-indigo-700
+                                mt-1
+                              "
+                            >
+                              Subjects:{" "}
+                              <span className="font-medium">
+                                {group.subject}
+                              </span>
+                            </div>
+
+                            <div
+                              className="
+                                mt-2
+                                flex
+                                flex-wrap
+                                gap-1.5
+                              "
+                            >
+                              {group.subTopics.map(
+                                (topic) => (
+                                  <span
+                                    key={topic}
+                                    className="
+                                      text-xs
+                                      px-2
+                                      py-0.5
+                                      rounded-full
+                                      bg-indigo-100
+                                      text-indigo-700
+                                    "
+                                  >
+                                    {topic}
+                                  </span>
+                                )
+                              )}
+                            </div>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() =>
+                              removeSubjectGroup(
+                                index
+                              )
+                            }
+                            className="
+                              text-red-500
+                              hover:text-red-700
+                              font-bold
+                              text-lg
+                            "
+                          >
+                            ×
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    )
+                  )}
                 </div>
               </div>
             )}
 
-            {/* Time + Difficulty */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            {/* ========================================
+                TIME + DIFFICULTY
+            ======================================== */}
+
+            <div
+              className="
+                grid
+                grid-cols-1
+                sm:grid-cols-2
+                gap-5
+              "
+            >
+
+              {/* TIME */}
+
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                <label
+                  className="
+                    block
+                    text-sm
+                    font-semibold
+                    text-gray-700
+                    mb-1.5
+                  "
+                >
                   Total Time (seconds)
                 </label>
+
                 <input
                   type="number"
+                  min="60"
                   value={totalTime}
-                  onChange={(e) => setTotalTime(Number(e.target.value))}
-                  className="w-full h-11 px-3 rounded-xl border border-gray-300 text-sm"
+                  onChange={(e) =>
+                    setTotalTime(
+                      Number(e.target.value)
+                    )
+                  }
+                  className="
+                    w-full
+                    h-11
+                    px-3
+                    rounded-xl
+                    border
+                    border-gray-300
+                    text-sm
+                  "
                 />
+
+                <p className="text-xs text-gray-500 mt-1">
+                  Example: 2400 = 40 minutes
+                </p>
               </div>
+
+              {/* DIFFICULTY */}
+
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                <label
+                  className="
+                    block
+                    text-sm
+                    font-semibold
+                    text-gray-700
+                    mb-1.5
+                  "
+                >
                   Target Complexity Level
                 </label>
+
                 <select
                   value={difficulty}
-                  onChange={(e) => setDifficulty(e.target.value)}
-                  className="w-full h-11 px-3 rounded-xl border border-gray-300 bg-white text-sm"
+                  onChange={(e) =>
+                    setDifficulty(
+                      e.target.value
+                    )
+                  }
+                  className="
+                    w-full
+                    h-11
+                    px-3
+                    rounded-xl
+                    border
+                    border-gray-300
+                    bg-white
+                    text-sm
+                  "
                 >
-                  <option value="easy">🟢 Easy</option>
-                  <option value="medium">🟡 Medium</option>
-                  <option value="hard">🔴 Hard</option>
+                  <option value="easy">
+                    🟢 Easy
+                  </option>
+
+                  <option value="medium">
+                    🟡 Medium
+                  </option>
+
+                  <option value="hard">
+                    🔴 Hard
+                  </option>
                 </select>
               </div>
             </div>
 
-            {/* Mode Switcher */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* ========================================
+                MODE SWITCHER
+            ======================================== */}
+
+            <div
+              className="
+                grid
+                grid-cols-1
+                sm:grid-cols-2
+                gap-4
+              "
+            >
               <button
                 type="button"
-                onClick={() => setCreationMode("manual")}
-                className={`py-3 rounded-xl font-semibold text-sm ${
-                  creationMode === "manual"
-                    ? "bg-green-600 text-white"
-                    : "bg-gray-200 text-gray-700"
-                }`}
+                onClick={() =>
+                  setCreationMode("manual")
+                }
+                className={`
+                  py-3
+                  rounded-xl
+                  font-semibold
+                  text-sm
+                  ${
+                    creationMode === "manual"
+                      ? "bg-green-600 text-white"
+                      : "bg-gray-200 text-gray-700"
+                  }
+                `}
               >
                 ✍️ Manual JSON Field
               </button>
+
               <button
                 type="button"
-                onClick={() => setCreationMode("ai")}
-                className={`py-3 rounded-xl font-semibold text-sm ${
-                  creationMode === "ai"
-                    ? "bg-purple-600 text-white"
-                    : "bg-gray-200 text-gray-700"
-                }`}
+                onClick={() =>
+                  setCreationMode("ai")
+                }
+                className={`
+                  py-3
+                  rounded-xl
+                  font-semibold
+                  text-sm
+                  ${
+                    creationMode === "ai"
+                      ? "bg-purple-600 text-white"
+                      : "bg-gray-200 text-gray-700"
+                  }
+                `}
               >
                 ✨ Smart AI Generation
               </button>
             </div>
 
-            {/* Conditional Area */}
+            {/* ========================================
+                CONDITIONAL MODE
+            ======================================== */}
+
             {creationMode === "manual" ? (
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                <label
+                  className="
+                    block
+                    text-sm
+                    font-semibold
+                    text-gray-700
+                    mb-1.5
+                  "
+                >
                   Paste Array Data (JSON format)
                 </label>
+
                 <textarea
-                  rows={7}
+                  rows={8}
                   value={manualJson}
-                  onChange={(e) => setManualJson(e.target.value)}
-                  placeholder={`[\n  {\n    "id": 1,\n    "section": "Microbiology",\n    "question": "Sample?",\n    "options": ["A","B","C","D"],\n    "answer": "A"\n  }\n]`}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-300 font-mono text-sm resize-y"
+                  onChange={(e) =>
+                    setManualJson(
+                      e.target.value
+                    )
+                  }
+                  placeholder={`[
+  {
+    "id": 1,
+    "section": "Microbiology",
+    "question": "Sample question?",
+    "options": [
+      "A",
+      "B",
+      "C",
+      "D"
+    ],
+    "answer": "A"
+  }
+]`}
+                  className="
+                    w-full
+                    px-4
+                    py-3
+                    rounded-xl
+                    border
+                    border-gray-300
+                    font-mono
+                    text-sm
+                    resize-y
+                    outline-none
+                    focus:border-blue-500
+                    focus:ring-1
+                    focus:ring-blue-500
+                  "
                 />
               </div>
             ) : (
-              <div className="bg-purple-50 border border-purple-200 rounded-xl p-5">
-                <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+              <div
+                className="
+                  bg-purple-50
+                  border
+                  border-purple-200
+                  rounded-xl
+                  p-5
+                "
+              >
+                <label
+                  className="
+                    block
+                    text-sm
+                    font-semibold
+                    text-gray-700
+                    mb-1.5
+                  "
+                >
                   No. of Questions (Total)
                 </label>
+
                 <input
                   type="number"
                   min={5}
                   max={100}
                   value={numQuestions}
-                  onChange={(e) => setNumQuestions(Number(e.target.value))}
-                  className="w-full h-11 px-3 rounded-xl border border-purple-300 text-sm"
+                  onChange={(e) =>
+                    setNumQuestions(
+                      Number(e.target.value)
+                    )
+                  }
+                  className="
+                    w-full
+                    h-11
+                    px-3
+                    rounded-xl
+                    border
+                    border-purple-300
+                    text-sm
+                  "
                 />
+
+                <p className="text-xs text-gray-500 mt-2">
+                  AI will generate exactly this
+                  number of questions.
+                </p>
               </div>
             )}
 
+            {/* ========================================
+                REQUEST PREVIEW
+            ======================================== */}
+
+            {creationMode === "ai" &&
+              subjects.length > 0 && (
+                <div
+                  className="
+                    rounded-xl
+                    border
+                    border-blue-200
+                    bg-blue-50
+                    p-4
+                  "
+                >
+                  <h3 className="font-semibold text-blue-900 mb-2">
+                    AI Generation Settings
+                  </h3>
+
+                  <div className="grid grid-cols-2 md:grid-cols-5 gap-3 text-sm">
+
+                    <div>
+                      <span className="text-gray-500">
+                        Questions
+                      </span>
+
+                      <p className="font-semibold">
+                        {numQuestions}
+                      </p>
+                    </div>
+
+                    <div>
+                      <span className="text-gray-500">
+                        Difficulty
+                      </span>
+
+                      <p className="font-semibold capitalize">
+                        {difficulty}
+                      </p>
+                    </div>
+
+                    <div>
+                      <span className="text-gray-500">
+                        Exam
+                      </span>
+
+                      <p className="font-semibold">
+                        {examType}
+                      </p>
+                    </div>
+
+                    <div>
+                      <span className="text-gray-500">
+                        Time
+                      </span>
+
+                      <p className="font-semibold">
+                        {totalTime}s
+                      </p>
+                    </div>
+
+                    <div>
+                      <span className="text-gray-500">
+                        Groups
+                      </span>
+
+                      <p className="font-semibold">
+                        {subjects.length}
+                      </p>
+                    </div>
+
+                  </div>
+                </div>
+              )}
+
+            {/* ========================================
+                ERROR
+            ======================================== */}
+
             {error && (
-              <p className="text-red-600 font-medium text-sm bg-red-50 border border-red-200 rounded-lg px-4 py-2">
+              <p
+                className="
+                  text-red-600
+                  font-medium
+                  text-sm
+                  bg-red-50
+                  border
+                  border-red-200
+                  rounded-lg
+                  px-4
+                  py-3
+                "
+              >
                 {error}
               </p>
             )}
 
+            {/* ========================================
+                SUBMIT
+            ======================================== */}
+
             <button
               type="submit"
               disabled={isLoading}
-              className={`w-full py-3.5 rounded-xl font-bold text-white text-base ${
-                creationMode === "ai"
-                  ? "bg-gradient-to-r from-purple-600 to-blue-600"
-                  : "bg-green-600"
-              } ${isLoading ? "opacity-70 cursor-not-allowed" : ""}`}
+              className={`
+                w-full
+                py-3.5
+                rounded-xl
+                font-bold
+                text-white
+                text-base
+
+                ${
+                  creationMode === "ai"
+                    ? "bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+                    : "bg-green-600 hover:bg-green-700"
+                }
+
+                ${
+                  isLoading
+                    ? "opacity-70 cursor-not-allowed"
+                    : ""
+                }
+              `}
             >
               {isLoading
-                ? "Assembling Your Test Workspace..."
+                ? creationMode === "ai"
+                  ? "🤖 AI is Generating Questions..."
+                  : "Assembling Your Test Workspace..."
+                : creationMode === "ai"
+                ? "🚀 Generate AI Test"
                 : "🚀 Launch Configured Test"}
             </button>
+
           </form>
         </div>
-
-        <button
-          onClick={() => navigate("/leaderboard")}
-          className="mt-5 w-full py-3.5 rounded-xl font-bold text-white bg-gradient-to-r from-indigo-600 to-purple-600"
-        >
-          LeaderBoard
-        </button>
       </div>
     </div>
   );
