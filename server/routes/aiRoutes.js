@@ -502,11 +502,10 @@ router.post(
         );
 
 
-      const prompt = `
+   const prompt = `
 You are an expert academic tutor.
 
-Analyze the questions a student
-got WRONG or UNATTEMPTED.
+Analyze the questions a student got WRONG or UNATTEMPTED.
 
 Topic:
 ${topic}
@@ -526,17 +525,22 @@ ${JSON.stringify(
 
 Generate:
 
-1. Error Breakdown & Logic
+1. Error Breakdown & Logic:
+   - Provide a ultra-concise breakdown.
+   - For closely matched options or tricky distractors, clearly point out the exact discriminating nuance or edge case that separates the correct answer from the trap.
 
-2. Target Concept Short Notes
+2. Target Concept Short Notes:
+   - High-yield, bite-sized summaries.
+   - Keep points crisp and direct (no lengthy exposition).
 
-3. Memory Reminders
+3. Memory Reminders:
+   - Bulleted mnemonics, quick formulas, or rule-of-thumb checks.
 
-Keep the response encouraging,
-diagnostic and structured.
-
-Do not mention questions
-that were answered correctly.
+Strict Rules:
+- Keep all explanations punchy, diagnostic, and structured; avoid long-winded text regardless of the difficulty level.
+- Focus specifically on why near-identical/confusing options fail.
+- Keep the tone encouraging.
+- Do not mention questions that were answered correctly.
 `;
 
 

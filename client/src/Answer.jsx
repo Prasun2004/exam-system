@@ -169,7 +169,7 @@ export default function ResultPage() {
             onClick={() => navigate("/question")}
             className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-xl transition"
           >
-            Go Home
+            Go Question Page
           </button>
         </div>
       </div>
@@ -189,10 +189,10 @@ export default function ResultPage() {
           </h2>
           <button
             type="button"
-            onClick={() => navigate("/")}
+            onClick={() => navigate("/question")}
             className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-xl transition"
           >
-            Go Home
+            Go Question Page
           </button>
         </div>
       </div>
@@ -315,10 +315,10 @@ export default function ResultPage() {
             <div className="flex flex-col sm:flex-row gap-3 justify-center pt-4">
               <button
                 type="button"
-                onClick={() => navigate("/")}
+                onClick={() => navigate("/question")}
                 className="px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium rounded-xl transition"
               >
-                Go Home
+                Go Question Page
               </button>
 
               <button

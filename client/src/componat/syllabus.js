@@ -16,7 +16,7 @@ export const syllabus = {
         "Structure & Function of Blood", "RBC Indices & ESR", "WBC & Differential Count",
         "Hemoglobinopathies", "Anemias", "Bleeding Disorders", "Coagulation & Anticoagulants",
         "Platelets & Platelet Disorders", "Bone Marrow Examination", "Blood Grouping & Rh Typing",
-        "Cross Matching", "Transfusion Medicine", "Hematology Analyzers"
+        "Cross Matching", "Transfusion Medicine", "Hematology Analyzers","Transfusion Reaction"
       ]
     },
     {

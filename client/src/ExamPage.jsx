@@ -483,26 +483,41 @@ export default function ExamPage() {
           )}
 
           {/* SUBJECTS */}
-          <div className="mb-8">
-            <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">
-              Subjects
-            </h3>
-            <div className="space-y-3">
-              {subjects.map((s, i) => (
-                <div
-                  key={i}
-                  className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3"
-                >
-                  <div className="font-semibold text-gray-900 text-sm">
-                    {s.category}
-                  </div>
-                  <div className="text-gray-600 text-sm mt-0.5">
-                    {s.subject}
-                  </div>
-                </div>
-              ))}
-            </div>
+          {/* SUBJECTS */}
+<div className="mb-8">
+  <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">
+    Subjects
+  </h3>
+  <div className="space-y-3">
+    {subjects.map((s, i) => (
+      <div
+        key={i}
+        className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3"
+      >
+        <div className="font-semibold text-gray-900 text-sm">
+          {s.category}
+        </div>
+        <div className="text-gray-600 text-sm mt-0.5">
+          {s.subject}
+        </div>
+
+        {/* Sub-topics */}
+        {Array.isArray(s.subTopics) && s.subTopics.length > 0 && (
+          <div className="mt-2.5 flex flex-wrap gap-1.5">
+            {s.subTopics.map((topic, idx) => (
+              <span
+                key={idx}
+                className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100"
+              >
+                {topic}
+              </span>
+            ))}
           </div>
+        )}
+      </div>
+    ))}
+  </div>
+</div>
 
           {/* EXAM INFO */}
           <div className="grid grid-cols-2 gap-3 mb-6">
@@ -647,25 +662,23 @@ export default function ExamPage() {
                 {sectionQuestions.length}
               </span>
 
-              {currentQuestionIndex < sectionQuestions.length - 1 ? (
-                <button
-                  type="button"
-                  onClick={handleNextQuestion}
-                  className="px-5 py-2.5 rounded-xl font-medium text-sm bg-blue-600 hover:bg-blue-700 text-white transition"
-                >
-                  Next
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={handleNextSection}
-                  className="px-5 py-2.5 rounded-xl font-medium text-sm bg-green-600 hover:bg-green-700 text-white transition"
-                >
-                  {currentSection === totalSections - 1
-                    ? "Submit Test"
-                    : "Next Section"}
-                </button>
-              )}
+             {currentQuestionIndex < sectionQuestions.length - 1 ? (
+  <button
+    type="button"
+    onClick={handleNextQuestion}
+    className="px-5 py-2.5 rounded-xl font-medium text-sm bg-blue-600 hover:bg-blue-700 text-white transition"
+  >
+    Next
+  </button>
+) : currentSection === totalSections - 1 ? (
+  <button
+    type="button"
+    onClick={handleSubmit}
+    className="px-5 py-2.5 rounded-xl font-medium text-sm bg-green-600 hover:bg-green-700 text-white transition"
+  >
+    Submit Test
+  </button>
+) : null}
             </div>
 
             {submitError && (

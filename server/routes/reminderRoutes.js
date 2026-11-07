@@ -748,23 +748,23 @@ router.get("/restricted-exam", requireAuth, async (req, res) => {
   try {
     const userId = req.user.id;
 
-    // 1. Get the absolute latest result just to know the most recent day
+    // 1. Latest result just to know the most recent calendar day
     const latestResult = await Result.findOne({ userId })
       .sort({ createdAt: -1 })
       .select("createdAt")
       .lean();
 
-    // User has never taken an exam
     if (!latestResult) {
       return res.status(200).json({
         success: true,
         locked: false,
         examIds: [],
+        failedExams: [],
         message: "No previous exam found.",
       });
     }
 
-    // 2. Build start & end of that calendar day (UTC)
+    // 2. Start & end of that UTC day
     const latestDate = new Date(latestResult.createdAt);
     const startOfDay = new Date(latestDate);
     startOfDay.setUTCHours(0, 0, 0, 0);
@@ -772,7 +772,7 @@ router.get("/restricted-exam", requireAuth, async (req, res) => {
     const endOfDay = new Date(latestDate);
     endOfDay.setUTCHours(23, 59, 59, 999);
 
-    // 3. Fetch ALL results of the user on that single day
+    // 3. All results of this user on that day (newest first)
     const dayResults = await Result.find({
       userId,
       createdAt: {
@@ -783,21 +783,55 @@ router.get("/restricted-exam", requireAuth, async (req, res) => {
       .sort({ createdAt: -1 })
       .lean();
 
-    // 4. Filter those that are below threshold
+    // 4. Find still-locked failing exams
+    //    A failing exam stays locked only if none of its topics
+    //    appear in a *later* exam on the same day.
     const failedExams = [];
 
-    for (const result of dayResults) {
+    for (let i = 0; i < dayResults.length; i++) {
+      const result = dayResults[i];
+
       const percentage = Number(result.percentage || 0);
       const difficulty = String(result.difficulty || "medium").toLowerCase();
       const threshold = DIFFICULTY_THRESHOLDS[difficulty] ?? 70;
 
-      if (percentage < threshold) {
+      if (percentage >= threshold) continue; // not a failing exam
+
+      // Topics from this failing exam
+      const restrictedTopics = (result.topic || "")
+        .split(",")
+        .map((t) => t.trim())
+        .filter(Boolean);
+
+      if (!restrictedTopics.length) continue;
+
+      // Exams that happened *after* this one (newer = lower index)
+      const laterExams = dayResults.slice(0, i);
+
+      // Collect every topic that was practiced after this failing exam
+      const practicedAfter = new Set();
+      laterExams.forEach((exam) => {
+        (exam.topic || "")
+          .split(",")
+          .map((t) => t.trim())
+          .filter(Boolean)
+          .forEach((t) => practicedAfter.add(t));
+      });
+
+      // Still locked topics = restricted topics that never appeared again
+      const stillLocked = restrictedTopics.filter(
+        (topic) => !practicedAfter.has(topic)
+      );
+
+      // Only treat this exam as restricting if some of its topics are still locked
+      if (stillLocked.length > 0) {
         failedExams.push({
           examId: result.examId,
           percentage,
           threshold,
           difficulty,
           topic: result.topic || null,
+          stillLockedTopics: stillLocked,
           createdAt: result.createdAt,
         });
       }
@@ -808,13 +842,12 @@ router.get("/restricted-exam", requireAuth, async (req, res) => {
       return res.status(200).json({
         success: true,
         locked: true,
-        examIds: failedExams.map((e) => e.examId), // array of ObjectIds
-        failedExams, // full details if frontend needs them
-        message: `You have ${failedExams.length} exam(s) below the required threshold on your latest exam day. Clear them before attempting a new exam.`,
+        examIds: failedExams.map((e) => e.examId),
+        failedExams,
+        message: `You have ${failedExams.length} exam(s) with uncleared topics on your latest exam day. Clear them before attempting a new exam.`,
       });
     }
 
-    // All exams on the latest day are cleared
     return res.status(200).json({
       success: true,
       locked: false,
