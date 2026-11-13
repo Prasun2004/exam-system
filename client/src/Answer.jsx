@@ -37,7 +37,12 @@ export default function ResultPage() {
   const [aiAnalysis, setAiAnalysis] = useState("");
   const [isAiLoading, setIsAiLoading] = useState(false);
   const [aiError, setAiError] = useState("");
-
+  
+  const difficultyThresholds = {
+  easy: 90,
+  medium: 80,
+  hard: 70,
+};
   // =====================================================
   // FETCH RESULT FROM SERVER
   // =====================================================
@@ -206,8 +211,9 @@ export default function ResultPage() {
   const score = result.marks ?? result.scoreRaw ?? 0;
   const reviewData = result.details ?? result.detailedResults ?? [];
   const percentage = Number(result.percentage ?? 0);
-  const isGood = percentage >= 80;
-
+  const difficulty = String(result.difficulty || "").trim().toLowerCase();
+  const requiredPercentage = difficultyThresholds[difficulty] ?? 80;
+  const isGood = percentage >= requiredPercentage;
   // =====================================================
   // SECTION STATS NORMALIZER  ← THE FIX
   // =====================================================

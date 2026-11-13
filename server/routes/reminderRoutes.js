@@ -42,9 +42,9 @@ const REPEAT_EVERY_MS =
 // =====================================================
 
 const DIFFICULTY_THRESHOLDS = {
-  easy: 80,
-  medium: 70,
-  hard: 63,
+  easy: 90,
+  medium: 80,
+  hard: 70,
 };
 
 
