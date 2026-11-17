@@ -24,7 +24,7 @@ export const syllabus = {
       subtopics: [
         "General Microbiology", "Bacteriology", "Culture Media", "Sterilization",
         "Biochemical Tests", "Immunology", "Serology", "Parasitology", "Mycology",
-        "Mycobacteriology", "Virology", "Infection Control", "Biosafety",
+        "Mycobacteriology", "(pox+adeno+picorna+herpes+hepatities)viruses","(ortho+para+arbo+rhabdo+oncogenic)viruses", "Infection Control", "Biosafety",
         "Antimicrobial Susceptibility Testing (AST)"
       ]
     },
