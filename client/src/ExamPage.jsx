@@ -673,13 +673,12 @@ export default function ExamPage() {
 ) :  (
   <button
     type="button"
-    onClick={handleSubmit}
-    className="px-5 py-2.5 rounded-xl font-medium text-sm bg-green-600 hover:bg-green-700 text-white transition"
+onClick={currentSection === totalSections - 1 ? handleSubmit : handleNextSection}
+  className="px-5 py-2.5 rounded-xl font-medium text-sm bg-green-600 hover:bg-green-700 text-white transition"
   >
    {currentSection === totalSections - 1
                     ? "Submit Test"
                     : "Next Section"}
-    Submit Test
   </button>
 ) }
             </div>
