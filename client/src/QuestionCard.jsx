@@ -12,16 +12,13 @@ export default function QuestionCard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // Restriction state
   const [locked, setLocked] = useState(false);
   const [allowedExamIds, setAllowedExamIds] = useState([]);
+  const [failedExams, setFailedExams] = useState([]);
   const [restrictionMessage, setRestrictionMessage] = useState("");
+  const [retakingId, setRetakingId] = useState(null);
 
   const navigate = useNavigate();
-
-  // ============================================
-  // FETCH EXAMS + RESTRICTION
-  // ============================================
 
   useEffect(() => {
     const fetchData = async () => {
@@ -43,11 +40,10 @@ export default function QuestionCard() {
         const restrictData = restrictRes.data || {};
 
         if (restrictData.success && restrictData.locked) {
-          const ids = (restrictData.examIds || []).map((id) =>
-            String(id)
-          );
+          const ids = (restrictData.examIds || []).map((id) => String(id));
           setLocked(true);
           setAllowedExamIds(ids);
+          setFailedExams(restrictData.failedExams || []);
           setRestrictionMessage(
             restrictData.message ||
               "You must clear previous failed exams before starting a new one."
@@ -55,6 +51,7 @@ export default function QuestionCard() {
         } else {
           setLocked(false);
           setAllowedExamIds([]);
+          setFailedExams([]);
           setRestrictionMessage("");
         }
       } catch (err) {
@@ -72,38 +69,31 @@ export default function QuestionCard() {
     fetchData();
   }, []);
 
-  // ============================================
-  // HELPER – is this exam allowed?
-  // ============================================
-
   const isExamAllowed = (exam) => {
     if (!locked) return true;
     return allowedExamIds.includes(String(exam.id));
   };
 
-  // ============================================
-  // FILTER + SEARCH
-  // ============================================
+  const getStillLockedTopics = (examId) => {
+    const fe = failedExams.find((f) => String(f.examId) === String(examId));
+    return fe?.stillLockedTopics || [];
+  };
 
   const filteredExams = useMemo(() => {
     let result = [...exams];
 
     if (search.trim()) {
       const searchText = search.toLowerCase();
-
       result = result.filter((exam) =>
         [exam.name, exam.title, exam.type, exam.mode]
           .filter(Boolean)
-          .some((value) =>
-            String(value).toLowerCase().includes(searchText)
-          )
+          .some((value) => String(value).toLowerCase().includes(searchText))
       );
     }
 
     if (difficulty !== "Difficulty") {
       result = result.filter(
-        (exam) =>
-          exam.mode?.toLowerCase() === difficulty.toLowerCase()
+        (exam) => exam.mode?.toLowerCase() === difficulty.toLowerCase()
       );
     }
 
@@ -113,34 +103,64 @@ export default function QuestionCard() {
       );
     }
 
-    if (dateFilter === "Newest First") {
-      result.reverse();
-    }
-
     if (dateFilter === "Oldest First") {
-      result.reverse();
+      result = [...result].reverse();
     }
 
     return result;
   }, [exams, search, topic, difficulty, dateFilter]);
 
-  // ============================================
-  // START EXAM
-  // ============================================
-
+  // START EXAM → same original questions
   const handleStartExam = (exam) => {
     if (!isExamAllowed(exam)) return;
     navigate(`/exam/${exam.id}`);
   };
 
+  // RETAKE → generate NEW questions for locked topics
+  const handleRetake = async (exam) => {
+    if (!isExamAllowed(exam) || retakingId) return;
+
+    let stillLocked = getStillLockedTopics(exam.id);
+    if (!stillLocked.length) {
+      stillLocked = (exam.title || "")
+        .split(",")
+        .map((t) => t.trim())
+        .filter(Boolean);
+    }
+
+    try {
+      setRetakingId(exam.id);
+
+      const res = await api.post("/ai/retake-exam", {
+        originalExamId: exam.id,
+        topics: stillLocked,
+        difficulty: exam.mode || "medium",
+        examType: (exam.type || "CRE").toUpperCase(),
+        numQuestions: exam.questions || 20,
+        totalTime: exam.time || 2400,
+      });
+
+      if (res.data?.success && res.data.examId) {
+        navigate(`/exam/${res.data.examId}`);
+      } else {
+        setError(res.data?.error || "Failed to generate retake exam.");
+      }
+    } catch (err) {
+      console.error("Retake error:", err);
+      setError(
+        err.response?.data?.error ||
+          err.response?.data?.message ||
+          "Failed to generate new questions for retake."
+      );
+    } finally {
+      setRetakingId(null);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-
-        {/* ============================================ */}
-        {/* FILTERS */}
-        {/* ============================================ */}
-
+        {/* Filters */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-6">
           <div className="flex flex-wrap items-center gap-3">
             <select
@@ -203,15 +223,12 @@ export default function QuestionCard() {
               </svg>
             </div>
           </div>
+
           <div className="flex items-center gap-3">
             <button
               type="button"
               onClick={() => navigate("/leaderboard")}
-              className="
-                px-5 py-2.5 rounded-xl font-semibold text-sm text-white
-                bg-gradient-to-r from-indigo-600 to-purple-600
-                hover:opacity-90 transition-opacity
-              "
+              className="px-5 py-2.5 rounded-xl font-semibold text-sm text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:opacity-90 transition-opacity"
             >
               🏆 Leaderboard
             </button>
@@ -219,86 +236,65 @@ export default function QuestionCard() {
             <button
               type="button"
               onClick={() => navigate("/CreateTest")}
-              className="
-                px-5 py-2.5 rounded-xl font-semibold text-sm text-white
-                bg-gradient-to-r from-blue-600 to-cyan-500
-                hover:opacity-90 transition-opacity
-              "
+              className="px-5 py-2.5 rounded-xl font-semibold text-sm text-white bg-gradient-to-r from-blue-600 to-cyan-500 hover:opacity-90 transition-opacity"
             >
               🛠️ Create Test
             </button>
           </div>
         </div>
 
-        {/* ============================================ */}
-        {/* RESTRICTION BANNER */}
-        {/* ============================================ */}
-
+        {/* Restriction Banner */}
         {locked && (
           <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
             <div className="font-semibold">⚠️ Restricted Mode</div>
             <div className="mt-1">
               {restrictionMessage ||
-                "You can only attempt the exams listed below that you previously scored below the threshold."}
+                "You can only attempt the exams listed below that you previously scored below the threshold. Score above the threshold to clear the topics."}
             </div>
           </div>
         )}
 
-        {/* ============================================ */}
-        {/* LOADING */}
-        {/* ============================================ */}
-
+        {/* Loading */}
         {loading && (
           <div className="flex justify-center py-20">
             <div className="w-10 h-10 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
           </div>
         )}
 
-        {/* ============================================ */}
-        {/* ERROR */}
-        {/* ============================================ */}
-
+        {/* Error */}
         {!loading && error && (
-          <div className="bg-red-50 border border-red-200 text-red-600 rounded-xl p-4 text-center">
+          <div className="bg-red-50 border border-red-200 text-red-600 rounded-xl p-4 text-center mb-4">
             {error}
+            <button onClick={() => setError("")} className="ml-3 underline text-sm">
+              Dismiss
+            </button>
           </div>
         )}
 
-        {/* ============================================ */}
-        {/* NO EXAMS */}
-        {/* ============================================ */}
-
+        {/* No Exams */}
         {!loading && !error && filteredExams.length === 0 && (
           <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center">
-            <h3 className="text-lg font-semibold text-gray-900">
-              No exams found
-            </h3>
-            <p className="text-gray-500 mt-2">
-              Try changing your filters or search.
-            </p>
+            <h3 className="text-lg font-semibold text-gray-900">No exams found</h3>
+            <p className="text-gray-500 mt-2">Try changing your filters or search.</p>
           </div>
         )}
 
-        {/* ============================================ */}
-        {/* EXAM CARDS */}
-        {/* ============================================ */}
-
+        {/* Exam Cards */}
         {!loading && !error && filteredExams.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredExams.map((exam) => {
               const allowed = isExamAllowed(exam);
+              const stillLockedTopics = getStillLockedTopics(exam.id);
+              const isRetaking = retakingId === exam.id;
 
               return (
                 <div
                   key={exam.id}
-                  className={`
-                    rounded-2xl border shadow-sm p-6 flex flex-col transition-all
-                    ${
-                      allowed
-                        ? "bg-white border-gray-100 hover:shadow-md"
-                        : "bg-gray-100 border-gray-200 opacity-60 grayscale cursor-not-allowed"
-                    }
-                  `}
+                  className={`rounded-2xl border shadow-sm p-6 flex flex-col transition-all ${
+                    allowed
+                      ? "bg-white border-gray-100 hover:shadow-md"
+                      : "bg-gray-100 border-gray-200 opacity-60 grayscale cursor-not-allowed"
+                  }`}
                 >
                   <div className="flex items-center gap-3 mb-4">
                     <img
@@ -307,12 +303,8 @@ export default function QuestionCard() {
                       className="w-11 h-11 rounded-full object-cover"
                     />
                     <div>
-                      <h3 className="font-semibold text-gray-900">
-                        {exam.name}
-                      </h3>
-                      <p className="text-xs text-gray-400 uppercase">
-                        {exam.type}
-                      </p>
+                      <h3 className="font-semibold text-gray-900">{exam.name}</h3>
+                      <p className="text-xs text-gray-400 uppercase">{exam.type}</p>
                     </div>
                   </div>
 
@@ -320,72 +312,79 @@ export default function QuestionCard() {
                     {exam.title}
                   </p>
 
-                  <div className="mb-4">
+                  <div className="mb-4 flex flex-wrap gap-2">
                     <span
-                      className={`inline-flex px-3 py-1 rounded-full text-xs font-medium
-                        ${
-                          exam.mode === "easy"
-                            ? "bg-green-100 text-green-700"
-                            : exam.mode === "medium"
-                            ? "bg-yellow-100 text-yellow-700"
-                            : "bg-red-100 text-red-700"
-                        }`}
+                      className={`inline-flex px-3 py-1 rounded-full text-xs font-medium ${
+                        exam.mode === "easy"
+                          ? "bg-green-100 text-green-700"
+                          : exam.mode === "medium"
+                          ? "bg-yellow-100 text-yellow-700"
+                          : "bg-red-100 text-red-700"
+                      }`}
                     >
-                      {exam.mode?.charAt(0).toUpperCase() +
-                        exam.mode?.slice(1)}
+                      {exam.mode?.charAt(0).toUpperCase() + exam.mode?.slice(1)}
                     </span>
+
+                    {allowed && locked && stillLockedTopics.length > 0 && (
+                      <span className="inline-flex px-3 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+                        Clear: {stillLockedTopics.join(", ")}
+                      </span>
+                    )}
                   </div>
 
                   <div className="flex items-center gap-5 text-sm text-gray-500 mb-6">
                     <span className="flex items-center gap-1.5">
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                        />
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                       </svg>
                       {exam.questions} Qs
                     </span>
 
                     <span className="flex items-center gap-1.5">
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                        />
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
                       {exam.time} s
                     </span>
                   </div>
 
-                  <button
-                    onClick={() => handleStartExam(exam)}
-                    disabled={!allowed}
-                    className={`
-                      mt-auto w-full font-medium py-3 rounded-xl transition-colors
-                      ${
-                        allowed
-                          ? "bg-blue-600 hover:bg-blue-700 text-white"
-                          : "bg-gray-300 text-gray-500 cursor-not-allowed"
-                      }
-                    `}
-                  >
-                    {allowed ? "START EXAM" : "LOCKED"}
-                  </button>
+                  {/* Buttons */}
+<div className="mt-auto space-y-2">
+  {allowed ? (
+    locked ? (
+      /* Restricted exam → only RETAKE (new questions) */
+      <button
+        onClick={() => handleRetake(exam)}
+        disabled={isRetaking}
+        className="w-full font-medium py-3 rounded-xl transition-colors bg-amber-500 hover:bg-amber-600 text-white disabled:opacity-60 flex items-center justify-center gap-2"
+      >
+        {isRetaking ? (
+          <>
+            <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            Generating…
+          </>
+        ) : (
+          "RETAKE EXAM"
+        )}
+      </button>
+    ) : (
+      /* Normal exam → START EXAM */
+      <button
+        onClick={() => handleStartExam(exam)}
+        className="w-full font-medium py-3 rounded-xl transition-colors bg-blue-600 hover:bg-blue-700 text-white"
+      >
+        START EXAM
+      </button>
+    )
+  ) : (
+    <button
+      disabled
+      className="w-full font-medium py-3 rounded-xl bg-gray-300 text-gray-500 cursor-not-allowed"
+    >
+      LOCKED
+    </button>
+  )}
+</div>
                 </div>
               );
             })}

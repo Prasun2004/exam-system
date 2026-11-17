@@ -3,229 +3,95 @@ import dotenv from "dotenv";
 import { GoogleGenAI, Type } from "@google/genai";
 import requireAuth from "../utils/authMiddleware.js";
 import requireRole from "../utils/roleMiddleware.js";
-import {GeneratedExam} from "../Schema/questionSchema.js"
+import { GeneratedExam } from "../Schema/questionSchema.js";
 
 dotenv.config();
 
 const router = express.Router();
 
-
 const ai = new GoogleGenAI({
-  apiKey:
-    process.env.GEMINI_API_KEY,
+  apiKey: process.env.GEMINI_API_KEY,
 });
 
-
 // =====================================================
-// GENERATE QUESTIONS
+// SHARED GENERATION HELPER
 // =====================================================
 
-router.post(
-  "/generate-questions",
-  requireAuth,
-  requireRole("teacher"),
-  async (req, res) => {
-    try {
-      // ============================================
-      // DATA FROM FRONTEND
-      // ============================================
+async function generateQuestionsWithAI({
+  subjects,
+  numQuestions,
+  difficulty,
+  examType,
+  totalTime,
+  teacherId,
+  teacherName,
+  email,
+}) {
+  const totalCount = Number(numQuestions) || 20;
 
-      const {
-        subjects,
-        numQuestions,
-        difficulty,
-        examType,
-        totalTime,
-      } = req.body;
+  let techRatio = 0.8;
+  let nonTechRatio = 0.2;
 
-      // ============================================
-      // DATA FROM JWT MIDDLEWARE
-      // ============================================
+  if (examType.toUpperCase() === "RRB") {
+    techRatio = 0.7;
+    nonTechRatio = 0.3;
+  }
 
-      const teacherId = req.user.id;
-      const teacherName = req.user.name;
-      const email = req.user.email;
+  let technicalTopics = [];
+  let nonTechnicalTopics = [];
 
-      // ============================================
-      // BASIC VALIDATION
-      // ============================================
+  subjects.forEach((group) => {
+    const category = (group.category || "").toLowerCase();
+    const subTopics = Array.isArray(group.subTopics) ? group.subTopics : [];
 
-      if (
-        !subjects ||
-        !Array.isArray(subjects) ||
-        subjects.length === 0 ||
-        !numQuestions ||
-        !difficulty ||
-        !examType ||
-        !totalTime
-      ) {
-        return res.status(400).json({
-          success: false,
-          error:
-            "Required fields: subjects, numQuestions, difficulty, examType, totalTime",
-        });
-      }
+    if (category.includes("non-technical") || category.includes("non_technical")) {
+      nonTechnicalTopics.push(...subTopics);
+    } else {
+      technicalTopics.push(...subTopics);
+    }
+  });
 
-      if (
-        !["easy", "medium", "hard"].includes(
-          difficulty.toLowerCase()
-        )
-      ) {
-        return res.status(400).json({
-          success: false,
-          error:
-            "Difficulty must be one of: easy, medium, hard",
-        });
-      }
+  technicalTopics = [...new Set(technicalTopics)];
+  nonTechnicalTopics = [...new Set(nonTechnicalTopics)];
 
-      if (
-        !["RRB", "CRE"].includes(
-          examType.toUpperCase()
-        )
-      ) {
-        return res.status(400).json({
-          success: false,
-          error:
-            "examType must be either RRB or CRE",
-        });
-      }
+  let techCount = 0;
+  let nonTechCount = 0;
 
-      if (!process.env.GEMINI_API_KEY) {
-        return res.status(500).json({
-          success: false,
-          error: "Gemini API key missing.",
-        });
-      }
+  if (technicalTopics.length > 0 && nonTechnicalTopics.length > 0) {
+    techCount = Math.round(totalCount * techRatio);
+    nonTechCount = totalCount - techCount;
+  } else if (technicalTopics.length > 0) {
+    techCount = totalCount;
+  } else if (nonTechnicalTopics.length > 0) {
+    nonTechCount = totalCount;
+  }
 
-      // ============================================
-      // QUESTION COUNT
-      // ============================================
+  let syllabusInstructions = "";
 
-      const totalCount =
-        Number(numQuestions) || 20;
-
-      // ============================================
-      // EXAM RATIO
-      // ============================================
-
-      let techRatio = 0.8;
-      let nonTechRatio = 0.2;
-
-      if (
-        examType.toUpperCase() === "RRB"
-      ) {
-        techRatio = 0.7;
-        nonTechRatio = 0.3;
-      }
-
-      // ============================================
-      // BUILD SYLLABUS INSTRUCTIONS
-      // ============================================
-
-      let syllabusInstructions = "";
-
-      let technicalTopics = [];
-      let nonTechnicalTopics = [];
-
-      subjects.forEach((group) => {
-        const category =
-          (group.category || "").toLowerCase();
-
-        const subTopics =
-          Array.isArray(group.subTopics)
-            ? group.subTopics
-            : [];
-
-        if (
-          category.includes("non-technical") ||
-          category.includes("non_technical")
-        ) {
-          nonTechnicalTopics.push(
-            ...subTopics
-          );
-        } else {
-          technicalTopics.push(
-            ...subTopics
-          );
-        }
-      });
-
-      // Remove duplicates
-      technicalTopics = [
-        ...new Set(technicalTopics),
-      ];
-
-      nonTechnicalTopics = [
-        ...new Set(nonTechnicalTopics),
-      ];
-
-      // ============================================
-      // QUESTION DISTRIBUTION
-      // ============================================
-
-      let techCount = 0;
-      let nonTechCount = 0;
-
-      if (
-        technicalTopics.length > 0 &&
-        nonTechnicalTopics.length > 0
-      ) {
-        techCount = Math.round(
-          totalCount * techRatio
-        );
-
-        nonTechCount =
-          totalCount - techCount;
-      } else if (
-        technicalTopics.length > 0
-      ) {
-        techCount = totalCount;
-      } else if (
-        nonTechnicalTopics.length > 0
-      ) {
-        nonTechCount = totalCount;
-      }
-
-      // ============================================
-      // SYLLABUS PROMPT
-      // ============================================
-
-      if (techCount > 0) {
-        syllabusInstructions += `
+  if (techCount > 0) {
+    syllabusInstructions += `
 - Technical Questions: EXACTLY ${techCount} questions.
 - Technical sub-topics:
-${technicalTopics
-  .map((topic) => `  - ${topic}`)
-  .join("\n")}
+${technicalTopics.map((topic) => `  - ${topic}`).join("\n")}
 `;
-      }
+  }
 
-      if (nonTechCount > 0) {
-        syllabusInstructions += `
+  if (nonTechCount > 0) {
+    syllabusInstructions += `
 - Non-Technical Questions: EXACTLY ${nonTechCount} questions.
 - Non-Technical sub-topics:
-${nonTechnicalTopics
-  .map((topic) => `  - ${topic}`)
-  .join("\n")}
+${nonTechnicalTopics.map((topic) => `  - ${topic}`).join("\n")}
 `;
-      }
+  }
 
-      // ============================================
-      // EXAM SPECIFIC RULES
-      // ============================================
+  const isCRE = examType.toUpperCase() === "CRE";
+  const isRRB = examType.toUpperCase() === "RRB";
 
-      const isCRE =
-        examType.toUpperCase() === "CRE";
+  let examSpecificRules = "";
 
-      const isRRB =
-        examType.toUpperCase() === "RRB";
-
-      let examSpecificRules = "";
-
-      if (isCRE) {
-        examSpecificRules = `
+  if (isCRE) {
+    examSpecificRules = `
 EXAM SPECIFIC GUIDELINES (CRE):
-
 - Overall Tone: Grounded in foundational concepts, direct standard theory, and basic memory recall.
 - EASY: Direct textbook definitions, standard terminology, fundamental laws, direct one-liners.
 - MEDIUM: Core conceptual questions.
@@ -233,12 +99,11 @@ EXAM SPECIFIC GUIDELINES (CRE):
 - ZERO calculation-based questions in technical section.
 - ZERO multi-line case-based questions.
 `;
-      }
+  }
 
-      if (isRRB) {
-        examSpecificRules = `
+  if (isRRB) {
+    examSpecificRules = `
 EXAM SPECIFIC GUIDELINES (RRB):
-
 - Tougher and analytical.
 - EASY should match or exceed CRE MEDIUM.
 - Use deceptive/tricky options.
@@ -246,13 +111,9 @@ EXAM SPECIFIC GUIDELINES (RRB):
 - Use exceptions.
 - Technical questions should test practical knowledge and calculations.
 `;
-      }
+  }
 
-      // ============================================
-      // GEMINI PROMPT
-      // ============================================
-
-      const prompt = `
+  const prompt = `
 You are an expert exam designer for the competitive examination: ${examType}.
 
 Generate exactly ${totalCount} multiple-choice questions.
@@ -282,181 +143,148 @@ GENERAL RULES:
 12. Return only valid JSON according to the supplied schema.
 `;
 
-      // ============================================
-      // GEMINI SCHEMA
-      // ============================================
-
-      const questionSchema = {
-        type: Type.OBJECT,
-
-        properties: {
-          questions: {
-            type: Type.ARRAY,
-
-            items: {
-              type: Type.OBJECT,
-
-              properties: {
-                id: {
-                  type: Type.INTEGER,
-                },
-
-                section: {
-                  type: Type.STRING,
-                },
-
-                question: {
-                  type: Type.STRING,
-                },
-
-                options: {
-                  type: Type.ARRAY,
-
-                  items: {
-                    type: Type.STRING,
-                  },
-                },
-
-                answer: {
-                  type: Type.STRING,
-                },
-              },
-
-              required: [
-                "id",
-                "section",
-                "question",
-                "options",
-                "answer",
-              ],
-            },
+  const questionSchema = {
+    type: Type.OBJECT,
+    properties: {
+      questions: {
+        type: Type.ARRAY,
+        items: {
+          type: Type.OBJECT,
+          properties: {
+            id: { type: Type.INTEGER },
+            section: { type: Type.STRING },
+            question: { type: Type.STRING },
+            options: { type: Type.ARRAY, items: { type: Type.STRING } },
+            answer: { type: Type.STRING },
           },
+          required: ["id", "section", "question", "options", "answer"],
         },
+      },
+    },
+    required: ["questions"],
+  };
 
-        required: ["questions"],
-      };
+  const response = await ai.models.generateContent({
+    model: "gemini-2.5-flash",
+    contents: prompt,
+    config: {
+      responseMimeType: "application/json",
+      responseSchema: questionSchema,
+    },
+  });
 
-      // ============================================
-      // CALL GEMINI
-      // ============================================
+  const quizData = JSON.parse(response.text);
+  const questions = quizData.questions || [];
 
-      const response =
-        await ai.models.generateContent({
-          model: "gemini-2.5-flash",
+  if (!questions.length) {
+    throw new Error("No questions were generated by AI.");
+  }
 
-          contents: prompt,
+  if (questions.length !== totalCount) {
+    throw new Error(`AI generated ${questions.length} questions instead of ${totalCount}.`);
+  }
 
-          config: {
-            responseMimeType:
-              "application/json",
+  const finalQuestions = questions.map((q, idx) => ({
+    id: idx + 1,
+    section: q.section,
+    question: q.question,
+    options: q.options,
+    answer: q.answer,
+  }));
 
-            responseSchema:
-              questionSchema,
-          },
-        });
+  const examRecord = await GeneratedExam.create({
+    teacherId,
+    teacherName,
+    email,
+    subjects,
+    numQuestions: Number(numQuestions),
+    difficulty: difficulty.toLowerCase(),
+    examType: examType.toUpperCase(),
+    totalTime: Number(totalTime),
+    questions: finalQuestions,
+    status: "generated",
+  });
 
-      // ============================================
-      // PARSE RESPONSE
-      // ============================================
+  return {
+    examId: examRecord._id,
+    questions: finalQuestions,
+  };
+}
 
-      const quizData = JSON.parse(
-        response.text
-      );
+// =====================================================
+// GENERATE QUESTIONS (Teacher only)
+// =====================================================
 
-      const questions =
-        quizData.questions || [];
+router.post(
+  "/generate-questions",
+  requireAuth,
+  requireRole("teacher"),
+  async (req, res) => {
+    try {
+      const { subjects, numQuestions, difficulty, examType, totalTime } = req.body;
 
-      if (!questions.length) {
-        return res.status(500).json({
-          success: false,
-          error:
-            "No questions were generated by AI.",
-        });
-      }
-
-      // ============================================
-      // VALIDATE QUESTION COUNT
-      // ============================================
+      const teacherId = req.user.id;
+      const teacherName = req.user.name;
+      const email = req.user.email;
 
       if (
-        questions.length !== totalCount
+        !subjects ||
+        !Array.isArray(subjects) ||
+        subjects.length === 0 ||
+        !numQuestions ||
+        !difficulty ||
+        !examType ||
+        !totalTime
       ) {
-        return res.status(500).json({
+        return res.status(400).json({
           success: false,
-          error: `AI generated ${questions.length} questions instead of ${totalCount}.`,
+          error: "Required fields: subjects, numQuestions, difficulty, examType, totalTime",
         });
       }
 
-      // ============================================
-      // RE-NUMBER QUESTIONS
-      // ============================================
-
-      const finalQuestions =
-        questions.map((q, idx) => ({
-          id: idx + 1,
-          section: q.section,
-          question: q.question,
-          options: q.options,
-          answer: q.answer,
-        }));
-
-      // ============================================
-      // SAVE DATABASE
-      // ============================================
-
-      const examRecord =
-        await GeneratedExam.create({
-          teacherId: teacherId,
-          teacherName: teacherName,
-          email: email,
-
-          subjects: subjects,
-
-          numQuestions:
-            Number(numQuestions),
-
-          difficulty:
-            difficulty.toLowerCase(),
-
-          examType:
-            examType.toUpperCase(),
-
-          totalTime:
-            Number(totalTime),
-
-          questions: finalQuestions,
-
-          status: "generated",
+      if (!["easy", "medium", "hard"].includes(difficulty.toLowerCase())) {
+        return res.status(400).json({
+          success: false,
+          error: "Difficulty must be one of: easy, medium, hard",
         });
+      }
 
-      // ============================================
-      // RESPONSE
-      // ============================================
+      if (!["RRB", "CRE"].includes(examType.toUpperCase())) {
+        return res.status(400).json({
+          success: false,
+          error: "examType must be either RRB or CRE",
+        });
+      }
+
+      if (!process.env.GEMINI_API_KEY) {
+        return res.status(500).json({
+          success: false,
+          error: "Gemini API key missing.",
+        });
+      }
+
+      const result = await generateQuestionsWithAI({
+        subjects,
+        numQuestions,
+        difficulty,
+        examType,
+        totalTime,
+        teacherId,
+        teacherName,
+        email,
+      });
 
       return res.status(201).json({
         success: true,
-
-        message:
-          "Questions generated and saved successfully",
-
-        examId:
-          examRecord._id,
-
-        questions:
-          finalQuestions,
+        message: "Questions generated and saved successfully",
+        examId: result.examId,
+        questions: result.questions,
       });
     } catch (error) {
-      console.error(
-        "AI Generation Error:",
-        error
-      );
-
+      console.error("AI Generation Error:", error);
       return res.status(500).json({
         success: false,
-
-        error:
-          "Failed to generate dynamic AI questionnaire.",
-
+        error: "Failed to generate dynamic AI questionnaire.",
         details: error.message,
       });
     }
@@ -464,45 +292,96 @@ GENERAL RULES:
 );
 
 // =====================================================
+// STUDENT RETAKE – generate NEW questions for locked topics
+// =====================================================
+
+router.post("/retake-exam", requireAuth, async (req, res) => {
+  try {
+    const {
+      originalExamId,
+      topics,
+      difficulty,
+      examType,
+      numQuestions,
+      totalTime,
+    } = req.body;
+
+    if (!topics || !Array.isArray(topics) || topics.length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: "topics array is required",
+      });
+    }
+
+    if (!difficulty || !examType) {
+      return res.status(400).json({
+        success: false,
+        error: "difficulty and examType are required",
+      });
+    }
+
+    if (!process.env.GEMINI_API_KEY) {
+      return res.status(500).json({
+        success: false,
+        error: "Gemini API key missing.",
+      });
+    }
+
+    // Build subjects structure for the generator
+    const subjects = [
+      {
+        category: "Technical",
+        subject: topics.join(", "),
+        subTopics: topics,
+      },
+    ];
+
+    const result = await generateQuestionsWithAI({
+      subjects,
+      numQuestions: numQuestions || 20,
+      difficulty: difficulty.toLowerCase(),
+      examType: examType.toUpperCase(),
+      totalTime: totalTime || 2400,
+      teacherId: req.user.id,
+      teacherName: req.user.name || "Student Retake",
+      email: req.user.email,
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: "Retake exam generated successfully",
+      examId: result.examId,
+      questions: result.questions,
+      originalExamId: originalExamId || null,
+      topics,
+    });
+  } catch (error) {
+    console.error("Retake Generation Error:", error);
+    return res.status(500).json({
+      success: false,
+      error: "Failed to generate retake exam.",
+      details: error.message,
+    });
+  }
+});
+
+// =====================================================
 // AI ANALYSIS
 // =====================================================
 
-router.post(
-  "/ai-analysis",
-  requireAuth,
-  async (req, res) => {
+router.post("/ai-analysis", requireAuth, async (req, res) => {
+  try {
+    const { score, percentage, questions, topic } = req.body;
 
-    try {
+    if (!process.env.GEMINI_API_KEY) {
+      return res.status(500).json({ error: "Gemini API key is missing." });
+    }
 
-      const {
-        score,
-        percentage,
-        questions,
-        topic,
-      } = req.body;
+    const missedQuestions = questions.filter(
+      (q) => q.status === "wrong" || q.status === "unattempted"
+    );
 
-
-      if (
-        !process.env.GEMINI_API_KEY
-      ) {
-
-        return res.status(500).json({
-          error:
-            "Gemini API key is missing.",
-        });
-      }
-
-
-      const missedQuestions =
-        questions.filter(
-          (q) =>
-            q.status === "wrong" ||
-            q.status ===
-              "unattempted"
-        );
-
-
-   const prompt = `
+    const prompt = `
 You are an expert academic tutor.
 
 Analyze the questions a student got WRONG or UNATTEMPTED.
@@ -517,11 +396,7 @@ Percentage:
 ${percentage}%
 
 Questions:
-${JSON.stringify(
-  missedQuestions,
-  null,
-  2
-)}
+${JSON.stringify(missedQuestions, null, 2)}
 
 Generate:
 
@@ -543,36 +418,16 @@ Strict Rules:
 - Do not mention questions that were answered correctly.
 `;
 
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: prompt,
+    });
 
-      const response =
-        await ai.models.generateContent({
-          model:
-            "gemini-2.5-flash",
-          contents:
-            prompt,
-        });
-
-
-      return res.json({
-        analysis:
-          response.text,
-      });
-
-
-    } catch (error) {
-
-      console.error(
-        "Gemini API Error:",
-        error
-      );
-
-
-      return res.status(500).json({
-        error:
-          "Failed to generate AI tutoring report.",
-      });
-    }
+    return res.json({ analysis: response.text });
+  } catch (error) {
+    console.error("Gemini API Error:", error);
+    return res.status(500).json({ error: "Failed to generate AI tutoring report." });
   }
-);
+});
 
 export default router;
